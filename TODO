@@ -6,6 +6,8 @@ TODO
 - Create a dummy folder/flow data structure, and play with the left pane
 - Make resources work like they do in Designer
 - Don't store entire VENV in git -- see: https://stackoverflow.com/a/6590783/145771
+- I shouldn't represent the grid as a QGraphicsItem.
+  Instead, I should draw it inside reimplementation of drawBackground().
 
 REMEMBER
 - use scene coordinates, not (necessarily) screen coordinates
@@ -15,3 +17,12 @@ REF
   https://www.bogotobogo.com/Qt/Qt5_QGraphicsView_QGraphicsScene_QGraphicsItems.php
 - Session Management
   https://doc.qt.io/qt-5/session.html
+
+- https://www.bogotobogo.com/Qt/Qt5_QGraphicsView_QGraphicsScene_QGraphicsItems.php
+- https://www.bogotobogo.com/Qt/Qt5_QTreeWidget.php
+
+- Snap to grid with ItemSendsGeometryChanges
+  https://www.walletfox.com/course/qgraphicsitemsnaptogrid.php
+- Possibly also ItemPositionChange
+  https://stackoverflow.com/a/48032672/14577190
+- When moving a selection of several items, perhaps need to temporarily wrap them in a group.
