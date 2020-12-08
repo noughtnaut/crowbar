@@ -1,102 +1,172 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QToolBar, QStatusBar, QWidget, QSplitter, QLabel, QGridLayout, QLayout, QVBoxLayout
+from PyQt5.QtCore import QSettings, QSize
+from PyQt5.QtWidgets import *
+
+from src.ui.UiUtils import get_child
+from src.widgets.Flow import *
+from src.widgets.PanedWidget import PanedWidget
+from src.widgets.ToolBar import ToolBar
 
 
 class WindowMain(QMainWindow):
+    canvas: Flow
 
-    def __init__(self, cfg: dict):
+    def __init__(self):
         super().__init__()
-        self.cfg = cfg
-        self._populate_main_window()
+        self.restoreSettings()
 
-    def _populate_main_window(self):
-        self.resize(800, 600)
-        self.setWindowTitle(self.cfg.get('app_name'))
-        self.setCentralWidget(self.create_central_widget())
         self._create_menu()
-        self._create_toolbar()
         self._create_status_bar()
+        self._create_content()
 
-    def create_central_widget(self):  # See: https://stackoverflow.com/a/65167358/14577190
-        left_pane = self.create_pane(self.create_pane_content('left'))
-        right_pane = self.create_pane(self.create_pane_content('right'))
+    def restoreSettings(self):
+        config = QSettings()
+        config.beginGroup("WindowMain")
+        try:
+            # TODO Figure out why `.toSize()` and `.toPoint()` give errors
+            # See: https://doc.qt.io/qtforpython/PySide2/QtCore/QSettings.html?highlight=qsettings#more
+            size = config.value("size")
+            print("size-type:", type(size))
+            if not size:
+                size = QSize(1200, 800)  # TODO Set to 80% of display (ask `sys` for dimensions)
+            self.resize(size)
+        finally:
+            pass
+        try:
+            pos = config.value("pos")
+            print("pos-type:", type(pos))
+            if not pos:
+                pos = QPoint(200, 200)
+            self.move(pos)
+        finally:
+            pass
+        config.endGroup()
+        print("--loaded--")
 
-        # Splitter, containing left and right panes
-        splitter = QSplitter(Qt.Horizontal)
-        splitter.addWidget(left_pane)
-        splitter.addWidget(right_pane)
+    def close(self):  # TODO This doesn't get called if closed by Alt+F4 or 'x' in title; so also save on window resize
+        self.storeSettings()
+        super().close()
 
-        # Container widget for splitter
-        central_container = QWidget()
-        grid_layout = QGridLayout(central_container)
-        grid_layout.addWidget(splitter)
-        central_container.setLayout(grid_layout)
-        return central_container
-
-    def create_pane(self, content: QLayout) -> QWidget:
-        # Container widget for pane layout
-        pane_layout_container = QWidget()
-        pane_layout_container.setLayout(content)
-        return pane_layout_container
-
-    def create_pane_content(self, identifier) -> QLayout:
-        content = QVBoxLayout()  # Layout widget for pane content
-
-        # FROM HERE you create your own content
-
-        toolbar = QToolBar()
-        toolbar.addWidget(QPushButton("Do Something"))
-        content.addWidget(toolbar)  # Don't forget this! ^_^
-
-        label = QLabel(identifier)
-        label.setAutoFillBackground(True)
-        p = label.palette()
-        p.setColor(label.backgroundRole(), Qt.lightGray)
-        label.setPalette(p)
-        label.setAlignment(Qt.AlignCenter)
-
-        content.addWidget(label)  # Don't forget this! ^_^
-
-        # UNTIL HERE you populate your content
-
-        return content
+    def storeSettings(self):
+        config = QSettings()
+        config.beginGroup("WindowMain")
+        config.setValue("size", self.size())
+        config.setValue("pos", self.pos())
+        config.endGroup()
+        print("--saved--")
 
     def _create_menu(self):
         menu_file = self.menuBar().addMenu("&File")
-        menu_file.addAction('&New Flow ...', self._do_new_flow)
-        menu_file.addAction('New &Group ...', self._do_new_group)
+        menu_file.addAction('&New Flow', self._do_new_flow)
+        menu_file.addAction('New &Group', self._do_new_group)
         menu_file.addSeparator()
         menu_file.addAction('&Quit', self._do_quit)
 
-        menu_help = self.menuBar().addMenu("&Help")
-        menu_help.addAction('&About', self._do_show_about)
+        menu_tools = self.menuBar().addMenu("&Tools")
+        menu_tools.addAction('&Options', self._do_NYI)
 
-    def _create_toolbar(self):
-        toolbar = QToolBar()
-        toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-        self.addToolBar(toolbar)
-        toolbar.addAction('New Flow ...', self._do_new_flow)
-        toolbar.addAction('New Group ...', self._do_new_group)
-        toolbar.addSeparator()
-        toolbar.addAction('Run', self._do_NYI)
-        toolbar.addAction('Triggers ...', self._do_NYI)
+        menu_help = self.menuBar().addMenu("&Help")
+        menu_help.addAction('&User Guide', self._do_NYI)
+        menu_help.addSeparator()
+        menu_help.addAction('&About ' + qApp.applicationName(), self._do_show_about)
+        menu_help.addAction('About &Qt', qApp.aboutQt)
 
     def _create_status_bar(self):
         status = QStatusBar()
         status.showMessage("/!\\ This app is a PROTOTYPE - do not use for anything serious!")
         self.setStatusBar(status)
 
+    def _create_content(self):
+        self.setCentralWidget(PanedWidget(
+            self.create_pane_left(),
+            self.create_pane_right(),
+        ))
+        splitter = get_child(self.centralWidget(), QSplitter)
+        # Don't allow either pane to be shrunk to nothing
+        splitter.setCollapsible(0, False)
+        splitter.setCollapsible(1, False)
+        # Give preference to canvas pane
+        splitter.setStretchFactor(1, 10)
+
+    def create_pane_left(self):
+        content = QMainWindow()
+
+        toolbar = QToolBar()
+        toolbar.addAction('New Category', self._do_new_group)
+        toolbar.addAction('New Flow', self._do_new_flow)
+        content.addToolBar(toolbar)
+
+        view = QTreeView()
+        content.setCentralWidget(view)
+
+        return content
+
+    def create_pane_right(self):
+        content = QMainWindow()
+
+        toolbar = ToolBar()
+        toolbar.addAction('Run', self._do_NYI)
+        toolbar.addSeparator()
+        toolbar.addAction('Triggers', self._do_NYI)
+        toolbar.addSeparator(True)
+        toolbar.addAction('Zoom reset', self._do_view_zoom_reset)
+        toolbar.addAction('Zoom to fit', self._do_view_zoom_to_fit)
+        toolbar.addSeparator(True)
+        toolbar.addAction('Options', self._do_NYI)
+        content.addToolBar(toolbar)
+
+        self.canvas = Flow()
+        content.setCentralWidget(self.canvas)
+
+        point1 = QPoint(0, 0)
+        point2 = QPoint(0, 100)
+        point3 = QPoint(0, 200)
+        box_trigger = FlowTrigger(point1)
+        box_condition = FlowCondition(point2)
+        box_action = FlowAction(point3)
+        self.canvas.scene.addItem(box_trigger)
+        self.canvas.scene.addItem(box_condition)
+        self.canvas.scene.addItem(box_action)
+        return content
+
     def _do_new_flow(self):
-        print("Feel the flow, man ...")
+        print("Feel the flow, man")
 
     def _do_new_group(self):
         print("Here's a new group for you.")
+
+    def _do_view_zoom_reset(self):
+        self.canvas.view.zoom_to_fit()
+        self.canvas.view.zoom_reset()
+        print("Back to normal.")
+
+    def _do_view_zoom_to_fit(self):
+        self.canvas.view.zoom_to_fit()
+        self.canvas.view.zoom_out()
+        print("Zoing, now it fits.")
 
     def _do_quit(self):
         self.close()
 
     def _do_show_about(self):
+        qApp.instance().window_about.show()  # TODO Why is `instance()` required here?
         print("Ain't that shiny?")
 
     def _do_NYI(self):
         print("<Not yet implemented>")
+        mb = QMessageBox()
+        mb.setIcon(QMessageBox.Warning)
+        mb.setText("Watch out for potholes!")
+        mb.setInformativeText("That feature is not yet implemented.")
+        mb.setWindowTitle("Prototype")
+        mb.setDetailedText("It seems the developers have been preoccupied with more important things ..."
+                           + " such as writing this incredibly useless dialog ...")
+        mb.setStandardButtons(QMessageBox.Ignore | QMessageBox.Ok | QMessageBox.Default | QMessageBox.Retry)
+        mb.exec_()
+        if 'Retry' == mb.clickedButton().text():
+            mb = QMessageBox()
+            mb.setIcon(QMessageBox.Information)
+            mb.setText("Dream on, man!")
+            mb.setInformativeText("Your optimism is admirable. It won't work, though.")
+            mb.setWindowTitle("Prototype")
+            mb.setStandardButtons(QMessageBox.Ok)
+            mb.exec_()

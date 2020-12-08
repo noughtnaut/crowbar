@@ -1,4 +1,17 @@
 TODO
+- Make poly boxes work (for Condition)
+- Make rudimentary lines work
+  - Use QGraphicsPathItem for connectors ... probably
 - Add logging for debugging etc.
 - Create a dummy folder/flow data structure, and play with the left pane
 - Make resources work like they do in Designer
+- Don't store entire VENV in git -- see: https://stackoverflow.com/a/6590783/145771
+
+REMEMBER
+- use scene coordinates, not (necessarily) screen coordinates
+
+REF
+- Qt5 Tutorial Customizing Items by inheriting QGraphicsItem
+  https://www.bogotobogo.com/Qt/Qt5_QGraphicsView_QGraphicsScene_QGraphicsItems.php
+- Session Management
+  https://doc.qt.io/qt-5/session.html

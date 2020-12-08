@@ -1,186 +1,188 @@
-import sys
+from typing import Optional
 
-from PyQt5.QtGui import QColor, QPainter, QPen, QWheelEvent, QMouseEvent
-from PyQt5.QtWidgets import QWidget
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtCore import QRectF, Qt
+from PyQt5.QtGui import QBrush, QColor, QCursor, QMouseEvent, QPainter, QPen, QWheelEvent
+from PyQt5.QtWidgets import QFrame, QGraphicsItem, QGraphicsItemGroup, QGraphicsRectItem, QGraphicsScene, QGraphicsView, \
+    QGridLayout, QStyleOptionGraphicsItem, QWidget
 
-if 'PyQt5' in sys.modules:
-    from PyQt5 import QtGui, QtWidgets
-    from PyQt5.QtCore import Qt, QPoint, QRect
+from ui.UiUtils import click_descriptor, with_control_key
 
-else:
-    from PySide2 import QtGui, QtWidgets
-    from PySide2.QtCore import Qt
-
-
-# QGraphicsAnchorLayout
-# QGraphicsScene
-# The QGraphicsScene class provides a surface for managing a large number of 2D graphical items. More
 
 class Canvas(QWidget):
-    """
-    The Canvas provides a surface for drawing upon. It handles view transformations (panning,
-    zooming, etc.) You can place Shape elements on the Canvas, and Shapes may then be subsequently
-    moved about and otherwise edited.
-    """
-    _config_canvas_background_color = QColor.fromRgb(16, 32, 16)  # dark green
-    _config_canvas_grid_color = QtGui.QColor('darkgreen')
-    _config_canvas_grid_size = 25
-    _view_offset = QPoint(20, 200)
-    _view_pan_from = QPoint(0, 0)
-    _view_pan_to = QPoint(0, 0)
-    _is_panning = False
-
-    def __init__(self, cfg):
+    def __init__(self):
         super().__init__()
-        self.cfg = cfg
+        self.scene = CanvasScene()
+        self.view = CanvasView(self.scene, self)
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.view)
+        self.setLayout(layout)
 
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.MinimumExpanding,
-            QtWidgets.QSizePolicy.MinimumExpanding
-        )
-        self.setCursor(Qt.OpenHandCursor)
+
+class CanvasShape(QGraphicsRectItem):
+
+    def __init__(self, rect: QRectF, *__args):
+        super().__init__(*__args)
+        self.setRect(rect)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.setVisible(True)
+
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem,
+              widget: Optional[QWidget] = ...) -> None:
+        # painter.drawRect(self.rect())
+        # painter.drawLine(self.rect().topLeft(), self.rect().bottomRight())
+        # painter.drawLine(self.rect().bottomLeft(), self.rect().topRight())
+        print("FIXME Override the paint() method in your subclass")
+
+
+class CanvasScene(QGraphicsScene):
+    _grid_minor = 20
+    _grid_medium = 100
+    _grid_major = 500
+
+    def __init__(self):
+        super().__init__()
+        self.setSceneRect(-5000, -500, 10000, 10000)  # TODO This should be set outside of Canvas
+
+        self._group_grid = QGraphicsItemGroup()
+
+        self._brush_background = QBrush(QColor(0, 40, 0))
+        scene_rect = self.sceneRect()
+        self._group_grid.addToGroup(
+            self.addRect(scene_rect, QPen(), self._brush_background))
+
+        self._pen_grid_minor = QPen()
+        self._pen_grid_minor.setWidth(1)
+        self._pen_grid_minor.setCosmetic(True)
+        self._pen_grid_minor.setColor(QColor(0, 48, 0))
+        for x in range(int(scene_rect.left()), int(scene_rect.right()), self._grid_minor):
+            self._group_grid.addToGroup(
+                self.addLine(x, scene_rect.top(), x, scene_rect.bottom(), self._pen_grid_minor))
+        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self._grid_minor):
+            self._group_grid.addToGroup(
+                self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_minor))
+
+        self._pen_grid_medium = QPen()
+        self._pen_grid_medium.setWidth(2)
+        self._pen_grid_medium.setCosmetic(True)
+        self._pen_grid_medium.setColor(QColor(0, 56, 0))
+        for x in range(int(scene_rect.left()), int(scene_rect.right()), self._grid_medium):
+            self._group_grid.addToGroup(
+                self.addLine(x, scene_rect.top(), x, scene_rect.bottom(), self._pen_grid_medium))
+        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self._grid_medium):
+            self._group_grid.addToGroup(
+                self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_medium))
+
+        self._pen_grid_major = QPen()
+        self._pen_grid_major.setWidth(3)
+        self._pen_grid_major.setCosmetic(True)
+        self._pen_grid_major.setColor(QColor(0, 64, 0))
+        for x in range(int(scene_rect.left()), int(scene_rect.right()), self._grid_major):
+            self._group_grid.addToGroup(
+                self.addLine(x, scene_rect.top(), x, scene_rect.bottom(), self._pen_grid_major))
+        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self._grid_major):
+            self._group_grid.addToGroup(
+                self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_major))
+        # Axis lines
+        # self._pen_grid_major.setColor(QColor(0, 96, 0))
+        # self._group_grid.addToGroup(
+        #     self.addLine(0, scene_rect.top(), 0, scene_rect.bottom(), self._pen_grid_major))
+        # self._group_grid.addToGroup(
+        #     self.addLine(scene_rect.left(), 0, scene_rect.right(), 0, self._pen_grid_major))
+
+        self.addItem(self._group_grid)
+
+    def itemsBoundingRectWithoutGrid(self) -> QtCore.QRectF:
+        self.removeItem(self._group_grid)
+        r = self.itemsBoundingRect()
+        self.addItem(self._group_grid)
+        self._group_grid.setZValue(-1)
+        return r
+
+
+class CanvasView(QGraphicsView):
+    _zoom = 1.0
+    _zoom_factor = 1.25
+    _zoom_min = 0.125
+    _zoom_max = 8
+
+    def __init__(self, scene: CanvasScene, parent: QWidget):
+        super().__init__(scene, parent)
+        self.setFrameStyle(QFrame.Panel)
         self.setMouseTracking(True)
-        self._view_offset = QPoint(50, 200)
+        self._cursor_normal = QCursor(Qt.ArrowCursor)
+        self._cursor_drag_canvas = QCursor(Qt.ClosedHandCursor)
+        self.setCursor(self._cursor_normal)
+        self._mouse_down = False
 
-    def paintEvent(self, e):
-        with QPainter(self) as painter:
-            painter.setRenderHint(QPainter.Antialiasing)
-            self.paint_background(painter)
-            self.paint_grid(painter)
-            self.paint_contents(painter)
-            self.paint_transform(painter)
+    def dragMoveEvent(self, event: QtGui.QDragMoveEvent) -> None:
+        super().dragMoveEvent(event)
+        print(click_descriptor(event, 'drag¤'))
 
-    def paint_background(self, painter: QPainter):
-        self.setAutoFillBackground(True)
-        p = self.palette()
-        p.setColor(self.backgroundRole(), self._config_canvas_background_color)
-        p.setColor(self.foregroundRole(), self._config_canvas_grid_color)
-        self.setPalette(p)
+    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        super().mouseMoveEvent(event)
+        # print(click_descriptor(event, 'drag' if self._mouse_down else 'move'))
 
-    def paint_grid(self, painter: QPainter):
-        # Draw a pattern of grid intersections/dots
-        # TODO Better done as pattern or hatch, so it is boundless
-        pen = QPen()
-        pen.setCosmetic(True)
-        pen.setColor(self._config_canvas_grid_color)
-        painter.setPen(pen)
-        for i in range(1, 50):
-            x = i * self._config_canvas_grid_size
-            for j in range(1, 50):
-                y = j * self._config_canvas_grid_size
-                painter.drawLine(x, y - 3, x, y + 3)
-                painter.drawLine(x - 3, y, x + 3, y)
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        super().mousePressEvent(event)
+        self.setCursor(self._cursor_drag_canvas)
+        print(click_descriptor(event, 'click'))
+        self._mouse_down = True
+        # TODO Move mouse smoothly, but snap dragged item to grid
 
-        # Draw origin
-        pen.setColor(QtGui.QColor('yellow'))
-        painter.setPen(pen)
-        painter.drawLine(0, -3, 0, 3)
-        painter.drawLine(-3, 0, 3, 0)
+    def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
+        super().mouseDoubleClickEvent(event)
+        print(click_descriptor(event, 'double-click'))
 
-        # Draw a vector while panning
-        if self._is_panning:
-            pen.setColor(QtGui.QColor('brown'))
-            pen.setDashPattern([3, 7])
-            painter.setPen(pen)
-            painter.drawLine(self._view_pan_from, self._view_pan_to)
-            painter.drawText(self._view_pan_to, "Pan offset")
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        super().mouseReleaseEvent(event)
+        self.setCursor(self._cursor_normal)
+        print(click_descriptor(event, 'release'))
+        self._mouse_down = False
 
-    def paint_contents(self, painter: QPainter):
-        pass
-
-    def paint_transform(self, painter: QPainter):
-        transform = painter.worldTransform()
-        transform.translate(50, 35)
-        transform.translate(self._view_offset.x(), self._view_offset.y())
-        # transform.scale(self._view_zoom/100, self._view_zoom/100)
-        painter.setWorldTransform(transform)
-        pass
-
-    def mousePressEvent(self, event: QMouseEvent):
-        if event.button() == Qt.LeftButton:
-            print("Click")
-        elif event.button() == Qt.RightButton:
-            print("Click-right")
-        elif event.button() == Qt.MiddleButton:
-            print("Click-middle")
-        elif event.button() == Qt.BackButton:
-            print("Click-back")
-        elif event.button() == Qt.ForwardButton:
-            print("Click-fwd")
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        # print(click_descriptor(event, 'scroll'))
+        # Zoom on Ctrl-scroll
+        if with_control_key(event) and event.angleDelta().y():
+            if event.angleDelta().y() > 0:
+                self.zoom_in()
+            else:
+                self.zoom_out()
         else:
-            print("Click:", event.button())
+            super().wheelEvent(event)
 
-        if event.button() == Qt.LeftButton:
-            self._view_pan_from = event.pos()
-            self._view_pan_to = self._view_pan_from
-            self._is_panning = True
-            self.setCursor(Qt.ClosedHandCursor)
-            self.update()
+    def zoom_out(self):
+        factor = 1 / self._zoom_factor
+        self.zoom_by_factor(factor)
 
-    def mouseDoubleClickEvent(self, event: QMouseEvent):
-        print("Cli-click")
-        pass
+    def zoom_in(self):
+        factor = self._zoom_factor
+        self.zoom_by_factor(factor)
 
-    def mouseReleaseEvent(self, event: QMouseEvent):
-        if self._is_panning and event.button() == Qt.LeftButton:
-            self._view_pan_from = QPoint(0, 0)
-            self._view_pan_to = QPoint(0, 0)
-            self._is_panning = False
-            self.setCursor(Qt.OpenHandCursor)
-            self.update()
+    def zoom_by_factor(self, factor):
+        print("old zoom (theoretical): ", self._zoom)
+        print("old zoom (actual)     : ", self.transform().m11())
+        new_zoom = self._zoom * factor
+        if self._zoom_min < new_zoom < self._zoom_max:
+            self.scale(factor, factor)
+            self._zoom = self.transform().m11()
+            # m11 and m22 are the applied x and y scaling factors
+            print("new zoom: ", self._zoom)
+        # TODO Keep the point at the cursor position in place while zooming (when possible)
 
-    def mouseMoveEvent(self, event: QMouseEvent):
-        if self._is_panning:
-            self._view_pan_to = event.pos()
-            # self._view_offset = self._view_offset + self._view_pan_to - self._view_pan_from
-            # print('offset: ', self._view_offset.x(), self._view_offset.y())
-            self.update()
+    def zoom_reset(self):
+        print("old zoom (theoretical): ", self._zoom)
+        print("old zoom (actual)     : ", self.transform().m11())
+        self.scale(1 / self._zoom, 1 / self._zoom)
+        self._zoom = self.transform().m11()
+        print("new zoom: ", self._zoom)
+        # TODO This works, but does nothing to bring the contents into view
 
-    def wheelEvent(self, event: QWheelEvent):
-        print("Wheeee!", event.angleDelta().y())
-        # if self.with_control_key(event: QMouseEvent):
-        #     self.zoom_adjust(event.angleDelta().y())
-
-    # def zoom_adjust(self, adjustment: float):
-    #     if not self._view_zoom_granularity_mouse:
-    #         self._view_zoom_granularity_mouse = abs(adjustment)/self._view_zoom_granularity
-    #
-    #     adjustment = -self._view_zoom_granularity_mouse - adjustment
-    #
-    #     self._view_zoom = self._view_zoom * adjustment
-    #     print("Zoom level: ", self._view_zoom)
-    #     self.update()
-    #
-    # def with_control_key(self, event: QMouseEvent) -> bool:
-    #     return event.modifiers() & Qt.ControlModifier
-    #
-    # def with_alt_key(self, event: QMouseEvent) -> bool:
-    #     return event.modifiers() & Qt.AltModifier
-    #
-    # def with_shift_key(self, event: QMouseEvent) -> bool:
-    #     return event.modifiers() & Qt.ShiftModifier
-
-
-class Block(QWidget):
-    """
-    The Block is ... a block.
-    """
-
-    pos = QPoint()
-
-    def __init__(self, cfg, x: int, y: int):
-        super().__init__()
-        self.cfg = cfg
-        self.pos = QPoint(x, y)
-        self.setFixedSize(100, 75)
-
-    def paintEvent(self, e):
-        with QPainter(self) as painter:
-            painter.setRenderHint(QPainter.Antialiasing)
-            pen = QPen()
-            pen.setCosmetic(True)
-            pen.setWidth(2)
-            pen.setColor(QtGui.QColor('blue'))
-            painter.setPen(pen)
-            rect = QRect(self.pos.x(), self.pos.y(), self.pos.x()+100, self.pos.y()+50)
-            painter.drawRoundedRect(rect, 5, 5, )
+    def zoom_to_fit(self):
+        print("old zoom (theoretical): ", self._zoom)
+        print("old zoom (actual)     : ", self.transform().m11())
+        self.fitInView(self.scene().itemsBoundingRectWithoutGrid(), Qt.KeepAspectRatio)
+        self._zoom = self.transform().m11()
+        print("new zoom: ", self._zoom)
