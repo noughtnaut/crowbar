@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Any, Optional
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import QRectF, Qt
+from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QCursor, QMouseEvent, QPainter, QPen, QWheelEvent
 from PyQt5.QtWidgets import QFrame, QGraphicsItem, QGraphicsItemGroup, QGraphicsRectItem, QGraphicsScene, QGraphicsView, \
     QGridLayout, QStyleOptionGraphicsItem, QWidget
@@ -27,7 +27,24 @@ class CanvasShape(QGraphicsRectItem):
         self.setRect(rect)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.setFlag(QGraphicsItem.ItemSendsScenePositionChanges, True)
         self.setVisible(True)
+
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        if change == QGraphicsItem.ItemPositionChange and self.scene():
+            # value is the new position
+            rect = self.scene().sceneRect()
+            # Keep the item inside the scene rect
+            if not rect.contains(value):
+                value.setX(min(rect.right(), max(value.x(), rect.left())))
+                value.setY(min(rect.bottom(), max(value.y(), rect.top())))
+            # Snap item to grid
+            grid_size = 10
+            x = round(value.x() / grid_size) * grid_size
+            y = round(value.y() / grid_size) * grid_size
+            return QPointF(x, y)
+        else:
+            return QGraphicsItem.itemChange(self, change, value)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem,
               widget: Optional[QWidget] = ...) -> None:
