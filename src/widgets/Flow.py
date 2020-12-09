@@ -1,16 +1,16 @@
 from typing import Optional
 
-from PyQt5.QtCore import QRectF, QPoint, Qt
-from PyQt5.QtGui import QPainter, QColor, QBrush, QPen
-from PyQt5.QtWidgets import QWidget, QStyleOptionGraphicsItem
+from PyQt5.QtCore import QPoint, QRectF, Qt
+from PyQt5.QtGui import QBrush, QColor, QPainter, QPen, QPolygonF
+from PyQt5.QtWidgets import QStyleOptionGraphicsItem, QWidget
 
-from widgets.Canvas import CanvasShape, Canvas, CanvasScene, CanvasView
+from widgets.Canvas import Canvas, CanvasScene, CanvasShape, CanvasView
 
 
 class FlowShape(CanvasShape):
     _pos: QPoint
     _width = 120
-    _height = 80
+    _height = 60
 
     def __init__(self, pos: QPoint, *__args):
         self._pos = pos
@@ -37,7 +37,7 @@ class FlowShape(CanvasShape):
 
 
 class FlowTrigger(FlowShape):
-    _corner_roundness = 75  # 0-99 on some arbitrary scale
+    _corner_roundness = 75  # roundness as percentage, so that 0..100 == rect..ellipse
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem,
               widget: Optional[QWidget] = ...) -> None:
@@ -48,25 +48,22 @@ class FlowTrigger(FlowShape):
 
 class FlowCondition(FlowShape):
 
-    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem,
-              widget: Optional[QWidget] = ...) -> None:
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         painter.setPen(self.pen())
         painter.setBrush(self.brush())
-        # TODO Draw a rhombus
-        # painter.drawPolygon(self.midsides())
 
-    def midsides(self):
-        t = self.rect().top()
-        l = self.rect().left()
-        r = self.rect().right()
-        b = self.rect().bottom()
-        mt = QPoint(l + (r - l) / 2, t)
-        mb = QPoint(l + (r - l) / 2, b)
-        ml = QPoint(l, t + (b - t) / 2)
-        mr = QPoint(r, t + (b - t) / 2)
-        return mt, ml, mr, mb
-        # FIXME The coordinates are (probably) okay,
-        # FIXME but they are not returned in a way that is useful to drawPolygon()
+        polygon = QPolygonF()
+        # Calculate by axis
+        top = QPoint(self._pos.x(), self._pos.y() - self._height / 2)
+        bot = QPoint(self._pos.x(), self._pos.y() + self._height / 2)
+        lef = QPoint(self._pos.x() - self._width / 2, self._pos.y())
+        rig = QPoint(self._pos.x() + self._width / 2, self._pos.y())
+        # Add points by clockwise order
+        polygon.append(top)
+        polygon.append(rig)
+        polygon.append(bot)
+        polygon.append(lef)
+        painter.drawPolygon(polygon)
 
 
 class FlowAction(FlowShape):

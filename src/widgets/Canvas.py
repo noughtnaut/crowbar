@@ -46,12 +46,11 @@ class CanvasShape(QGraphicsRectItem):
         else:
             return QGraphicsItem.itemChange(self, change, value)
 
-    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem,
-              widget: Optional[QWidget] = ...) -> None:
-        # painter.drawRect(self.rect())
-        # painter.drawLine(self.rect().topLeft(), self.rect().bottomRight())
-        # painter.drawLine(self.rect().bottomLeft(), self.rect().topRight())
-        print("FIXME Override the paint() method in your subclass")
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
+        painter.drawRect(self.rect())
+        painter.drawLine(self.rect().topLeft(), self.rect().bottomRight())
+        painter.drawLine(self.rect().bottomLeft(), self.rect().topRight())
+        raise Exception('Override the paint() method in your subclass')
 
 
 class CanvasScene(QGraphicsScene):
