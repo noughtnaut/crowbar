@@ -1,4 +1,5 @@
 from PyQt5.QtCore import QSettings, QSize
+from PyQt5.QtGui import QMoveEvent, QResizeEvent
 from PyQt5.QtWidgets import *
 
 from src.ui.UiUtils import get_child
@@ -18,33 +19,28 @@ class WindowMain(QMainWindow):
         self._create_status_bar()
         self._create_content()
 
+    def close(self):
+        self.storeSettings()
+        super().close()
+
+    def resizeEvent(self, e: QResizeEvent):
+        self.storeSettings()
+
+    def moveEvent(self, e: QMoveEvent):
+        self.storeSettings()
+
     def restoreSettings(self):
         config = QSettings()
         config.beginGroup("WindowMain")
-        try:
-            # TODO Figure out why `.toSize()` and `.toPoint()` give errors
-            # See: https://doc.qt.io/qtforpython/PySide2/QtCore/QSettings.html?highlight=qsettings#more
-            size = config.value("size")
-            print("size-type:", type(size))
-            if not size:
-                size = QSize(1200, 800)  # TODO Set to 80% of display (ask `sys` for dimensions)
-            self.resize(size)
-        finally:
-            pass
-        try:
-            pos = config.value("pos")
-            print("pos-type:", type(pos))
-            if not pos:
-                pos = QPoint(200, 200)
-            self.move(pos)
-        finally:
-            pass
+        size = config.value("size")
+        pos = config.value("pos")
+        if not size:
+            size = QSize(1200, 800)  # TODO Set to 80% of display (ask `sys` for dimensions)
+        self.resize(size)
+        if not pos:
+            pos = QPoint(200, 200)
+        self.move(pos)
         config.endGroup()
-        print("--loaded--")
-
-    def close(self):  # TODO This doesn't get called if closed by Alt+F4 or 'x' in title; so also save on window resize
-        self.storeSettings()
-        super().close()
 
     def storeSettings(self):
         config = QSettings()
@@ -52,7 +48,6 @@ class WindowMain(QMainWindow):
         config.setValue("size", self.size())
         config.setValue("pos", self.pos())
         config.endGroup()
-        print("--saved--")
 
     def _create_menu(self):
         menu_file = self.menuBar().addMenu("&File")
@@ -108,8 +103,10 @@ class WindowMain(QMainWindow):
         toolbar.addSeparator()
         toolbar.addAction('Triggers', self._do_NYI)
         toolbar.addSeparator(True)
-        toolbar.addAction('Zoom reset', self._do_view_zoom_reset)
-        toolbar.addAction('Zoom to fit', self._do_view_zoom_to_fit)
+        toolbar.addAction('Zoom In', self._do_view_zoom_in)
+        toolbar.addAction('Zoom Out', self._do_view_zoom_out)
+        toolbar.addAction('Zoom Reset', self._do_view_zoom_reset)
+        toolbar.addAction('Zoom to Fit', self._do_view_zoom_to_fit)
         toolbar.addSeparator(True)
         toolbar.addAction('Options', self._do_NYI)
         content.addToolBar(toolbar)
@@ -126,6 +123,7 @@ class WindowMain(QMainWindow):
         self.canvas.scene.addItem(box_trigger)
         self.canvas.scene.addItem(box_condition)
         self.canvas.scene.addItem(box_action)
+        self._do_view_zoom_reset()
         return content
 
     def _do_new_flow(self):
@@ -133,6 +131,14 @@ class WindowMain(QMainWindow):
 
     def _do_new_group(self):
         print("Here's a new group for you.")
+
+    def _do_view_zoom_in(self):
+        self.canvas.view.zoom_in()
+        print("Zoom in.")
+
+    def _do_view_zoom_out(self):
+        self.canvas.view.zoom_out()
+        print("Zoom out.")
 
     def _do_view_zoom_reset(self):
         self.canvas.view.zoom_to_fit()
