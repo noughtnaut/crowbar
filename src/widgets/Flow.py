@@ -34,23 +34,27 @@ class FlowTrigger(FlowShape):
 
 
 class FlowCondition(FlowShape):
+    # FIXME Mouse click hit should be determined using bounding polygon, not bounding rect
+    _polygon: QPolygonF
 
-    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
-        painter.setPen(self.pen())
-        painter.setBrush(self.brush())
-
-        polygon = QPolygonF()
+    def __init__(self, *__args):
+        super().__init__(*__args)
+        self._polygon = QPolygonF()
         # Calculate by axis
         top = QPoint(self._pos.x(), self._pos.y() - self._height / 2)
         bot = QPoint(self._pos.x(), self._pos.y() + self._height / 2)
         lef = QPoint(self._pos.x() - self._width / 2, self._pos.y())
         rig = QPoint(self._pos.x() + self._width / 2, self._pos.y())
         # Add points by clockwise order
-        polygon.append(top)
-        polygon.append(rig)
-        polygon.append(bot)
-        polygon.append(lef)
-        painter.drawPolygon(polygon)
+        self._polygon.append(top)
+        self._polygon.append(rig)
+        self._polygon.append(bot)
+        self._polygon.append(lef)
+
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
+        painter.setPen(self.pen())
+        painter.setBrush(self.brush())
+        painter.drawPolygon(self._polygon)
 
 
 class FlowAction(FlowShape):
