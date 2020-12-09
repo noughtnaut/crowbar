@@ -84,11 +84,12 @@ class CanvasScene(QGraphicsScene):
     def __init__(self):
         super().__init__()
         self.setSceneRect(-5000, -500, 10000, 10000)  # TODO This should be set outside of Canvas
-
         self._create_background_grid()
 
     def _create_background_grid(self):
         self._group_grid = QGraphicsItemGroup()
+        self.addItem(self._group_grid)
+
         self._brush_background = QBrush(QColor(0, 40, 0))
         scene_rect = self.sceneRect()
         self._group_grid.addToGroup(
@@ -129,7 +130,6 @@ class CanvasScene(QGraphicsScene):
             self.addLine(0, scene_rect.top(), 0, scene_rect.bottom(), self._pen_grid_major))
         self._group_grid.addToGroup(
             self.addLine(scene_rect.left(), 0, scene_rect.right(), 0, self._pen_grid_major))
-        self.addItem(self._group_grid)
 
     def itemsBoundingRectWithoutGrid(self) -> QtCore.QRectF:
         self.removeItem(self._group_grid)
@@ -150,34 +150,29 @@ class CanvasView(QGraphicsView):
         self.setFrameStyle(QFrame.Panel)
         self.setMouseTracking(True)
         self._cursor_normal = QCursor(Qt.ArrowCursor)
-        self._cursor_drag_canvas = QCursor(Qt.ClosedHandCursor)
+        self._cursor_crosshair = QCursor(Qt.CrossCursor)
+        self._cursor_closed_hand = QCursor(Qt.ClosedHandCursor)
         self.setCursor(self._cursor_normal)
-        self._mouse_down = False
 
     def dragMoveEvent(self, event: QtGui.QDragMoveEvent) -> None:
-        super().dragMoveEvent(event)
         print(click_descriptor(event, 'drag¤'))
+        super().dragMoveEvent(event)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        # print(click_descriptor(event, 'move'))
         super().mouseMoveEvent(event)
-        # print(click_descriptor(event, 'drag' if self._mouse_down else 'move'))
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        super().mousePressEvent(event)
-        self.setCursor(self._cursor_drag_canvas)
         print(click_descriptor(event, 'click'))
-        self._mouse_down = True
-        # TODO Move mouse smoothly, but snap dragged item to grid
+        super().mousePressEvent(event)
 
     def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
         super().mouseDoubleClickEvent(event)
         print(click_descriptor(event, 'double-click'))
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        super().mouseReleaseEvent(event)
-        self.setCursor(self._cursor_normal)
         print(click_descriptor(event, 'release'))
-        self._mouse_down = False
+        super().mouseReleaseEvent(event)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         # print(click_descriptor(event, 'scroll'))
@@ -199,27 +194,17 @@ class CanvasView(QGraphicsView):
         self.zoom_by_factor(factor)
 
     def zoom_by_factor(self, factor):
-        print("old zoom (theoretical): ", self._zoom)
-        print("old zoom (actual)     : ", self.transform().m11())
         new_zoom = self._zoom * factor
         if self._zoom_min < new_zoom < self._zoom_max:
             self.scale(factor, factor)
-            self._zoom = self.transform().m11()
-            # m11 and m22 are the applied x and y scaling factors
-            print("new zoom: ", self._zoom)
+            self._zoom = self.transform().m11()  # m11 and m22 are the applied x and y scaling factors
         # TODO Keep the point at the cursor position in place while zooming (when possible)
 
     def zoom_reset(self):
-        print("old zoom (theoretical): ", self._zoom)
-        print("old zoom (actual)     : ", self.transform().m11())
+        # Note: This works, but does nothing to bring the contents into view
         self.scale(1 / self._zoom, 1 / self._zoom)
         self._zoom = self.transform().m11()
-        print("new zoom: ", self._zoom)
-        # TODO This works, but does nothing to bring the contents into view
 
     def zoom_to_fit(self):
-        print("old zoom (theoretical): ", self._zoom)
-        print("old zoom (actual)     : ", self.transform().m11())
         self.fitInView(self.scene().itemsBoundingRectWithoutGrid(), Qt.KeepAspectRatio)
         self._zoom = self.transform().m11()
-        print("new zoom: ", self._zoom)
