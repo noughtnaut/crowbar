@@ -3,8 +3,8 @@ from typing import Any, Optional
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QCursor, QMouseEvent, QPainter, QPen, QWheelEvent
-from PyQt5.QtWidgets import QFrame, QGraphicsItem, QGraphicsItemGroup, QGraphicsRectItem, QGraphicsScene, QGraphicsView, \
-    QGridLayout, QStyleOptionGraphicsItem, QWidget
+from PyQt5.QtWidgets import QAbstractGraphicsShapeItem, QFrame, QGraphicsItem, QGraphicsItemGroup, QGraphicsScene, \
+    QGraphicsView, QGridLayout, QStyleOptionGraphicsItem, QWidget
 
 from ui.UiUtils import click_descriptor, with_control_key
 
@@ -20,15 +20,37 @@ class Canvas(QWidget):
         self.setLayout(layout)
 
 
-class CanvasShape(QGraphicsRectItem):
+class CanvasShape(QAbstractGraphicsShapeItem):
+    _pos: QPointF
+    _rect: QRectF
 
-    def __init__(self, rect: QRectF, *__args):
+    def __init__(self, pos: QPointF, *__args):
         super().__init__(*__args)
-        self.setRect(rect)
+        self.setPos(pos)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemSendsScenePositionChanges, True)
         self.setVisible(True)
+
+    def setPos(self, pos: QPointF):
+        self._pos = pos
+
+    def setWidth(self, w: int):
+        self._width = w
+
+    def setHeight(self, h: int):
+        self._height = h
+
+    def boundingRect(self) -> QtCore.QRectF:
+        return self.rect()
+
+    def rect(self):
+        return QRectF(
+            self._pos.x() - self._width / 2,
+            self._pos.y() - self._height / 2,
+            self._width,
+            self._height
+        )
 
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.ItemPositionChange and self.scene():
@@ -47,9 +69,10 @@ class CanvasShape(QGraphicsRectItem):
             return QGraphicsItem.itemChange(self, change, value)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
-        painter.drawRect(self.rect())
-        painter.drawLine(self.rect().topLeft(), self.rect().bottomRight())
-        painter.drawLine(self.rect().bottomLeft(), self.rect().topRight())
+        r = self.boundingRect()
+        painter.drawRect(r)
+        painter.drawLine(r.topLeft(), r.bottomRight())
+        painter.drawLine(r.bottomLeft(), r.topRight())
         raise Exception('Override the paint() method in your subclass')
 
 
@@ -62,13 +85,14 @@ class CanvasScene(QGraphicsScene):
         super().__init__()
         self.setSceneRect(-5000, -500, 10000, 10000)  # TODO This should be set outside of Canvas
 
-        self._group_grid = QGraphicsItemGroup()
+        self._create_background_grid()
 
+    def _create_background_grid(self):
+        self._group_grid = QGraphicsItemGroup()
         self._brush_background = QBrush(QColor(0, 40, 0))
         scene_rect = self.sceneRect()
         self._group_grid.addToGroup(
             self.addRect(scene_rect, QPen(), self._brush_background))
-
         self._pen_grid_minor = QPen()
         self._pen_grid_minor.setWidth(1)
         self._pen_grid_minor.setCosmetic(True)
@@ -79,7 +103,6 @@ class CanvasScene(QGraphicsScene):
         for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self._grid_minor):
             self._group_grid.addToGroup(
                 self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_minor))
-
         self._pen_grid_medium = QPen()
         self._pen_grid_medium.setWidth(2)
         self._pen_grid_medium.setCosmetic(True)
@@ -90,7 +113,6 @@ class CanvasScene(QGraphicsScene):
         for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self._grid_medium):
             self._group_grid.addToGroup(
                 self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_medium))
-
         self._pen_grid_major = QPen()
         self._pen_grid_major.setWidth(3)
         self._pen_grid_major.setCosmetic(True)
@@ -102,12 +124,11 @@ class CanvasScene(QGraphicsScene):
             self._group_grid.addToGroup(
                 self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_major))
         # Axis lines
-        # self._pen_grid_major.setColor(QColor(0, 96, 0))
-        # self._group_grid.addToGroup(
-        #     self.addLine(0, scene_rect.top(), 0, scene_rect.bottom(), self._pen_grid_major))
-        # self._group_grid.addToGroup(
-        #     self.addLine(scene_rect.left(), 0, scene_rect.right(), 0, self._pen_grid_major))
-
+        self._pen_grid_major.setColor(QColor(0, 96, 0))
+        self._group_grid.addToGroup(
+            self.addLine(0, scene_rect.top(), 0, scene_rect.bottom(), self._pen_grid_major))
+        self._group_grid.addToGroup(
+            self.addLine(scene_rect.left(), 0, scene_rect.right(), 0, self._pen_grid_major))
         self.addItem(self._group_grid)
 
     def itemsBoundingRectWithoutGrid(self) -> QtCore.QRectF:

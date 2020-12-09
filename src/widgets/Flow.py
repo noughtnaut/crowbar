@@ -1,6 +1,6 @@
 from typing import Optional
 
-from PyQt5.QtCore import QPoint, QRectF, Qt
+from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtGui import QBrush, QColor, QPainter, QPen, QPolygonF
 from PyQt5.QtWidgets import QStyleOptionGraphicsItem, QWidget
 
@@ -8,14 +8,10 @@ from widgets.Canvas import Canvas, CanvasScene, CanvasShape, CanvasView
 
 
 class FlowShape(CanvasShape):
-    _pos: QPoint
-    _width = 120
-    _height = 60
-
-    def __init__(self, pos: QPoint, *__args):
-        self._pos = pos
-        super().__init__(self.rect(), *__args)
-
+    def __init__(self, *__args):
+        super().__init__(*__args)
+        self.setWidth(120)
+        self.setHeight(60)
         pen_shape_edge = QPen()
         pen_shape_edge.setWidth(2)
         pen_shape_edge.setJoinStyle(Qt.RoundJoin)
@@ -27,20 +23,11 @@ class FlowShape(CanvasShape):
         self.setPen(pen_shape_edge)
         self.setBrush(brush_shape_fill)
 
-    def rect(self):
-        return QRectF(
-            self._pos.x() - self._width / 2,
-            self._pos.y() - self._height / 2,
-            self._width,
-            self._height
-        )
-
 
 class FlowTrigger(FlowShape):
     _corner_roundness = 75  # roundness as percentage, so that 0..100 == rect..ellipse
 
-    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem,
-              widget: Optional[QWidget] = ...) -> None:
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         painter.setPen(self.pen())
         painter.setBrush(self.brush())
         painter.drawRoundedRect(self.rect(), self._corner_roundness / 4, self._corner_roundness)
@@ -67,8 +54,7 @@ class FlowCondition(FlowShape):
 
 
 class FlowAction(FlowShape):
-    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem,
-              widget: Optional[QWidget] = ...) -> None:
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         painter.setPen(self.pen())
         painter.setBrush(self.brush())
         painter.fillRect(self.rect(), self.brush())
