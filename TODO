@@ -1,5 +1,4 @@
 TODO
-- Make poly boxes work (for Condition)
 - Make rudimentary lines work
   - Use QGraphicsPathItem for connectors ... probably
 - Add logging for debugging etc.

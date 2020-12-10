@@ -1,7 +1,7 @@
 from typing import Optional
 
 from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QBrush, QColor, QPainter, QPen, QPolygonF
+from PyQt5.QtGui import QBrush, QColor, QPainter, QPainterPath, QPen, QPolygonF
 from PyQt5.QtWidgets import QStyleOptionGraphicsItem, QWidget
 
 from widgets.Canvas import Canvas, CanvasScene, CanvasShape, CanvasView
@@ -34,8 +34,8 @@ class FlowTrigger(FlowShape):
 
 
 class FlowCondition(FlowShape):
-    # FIXME Mouse click hit should be determined using bounding polygon, not bounding rect
     _polygon: QPolygonF
+    _shape: QPainterPath
 
     def __init__(self, *__args):
         super().__init__(*__args)
@@ -50,11 +50,16 @@ class FlowCondition(FlowShape):
         self._polygon.append(rig)
         self._polygon.append(bot)
         self._polygon.append(lef)
+        self._shape = QPainterPath()
+        self._shape.addPolygon(self._polygon)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         painter.setPen(self.pen())
         painter.setBrush(self.brush())
         painter.drawPolygon(self._polygon)
+
+    def shape(self) -> QPainterPath:
+        return self._shape
 
 
 class FlowAction(FlowShape):
