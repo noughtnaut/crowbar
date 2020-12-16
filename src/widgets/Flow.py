@@ -4,6 +4,7 @@ from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtGui import QBrush, QColor, QPainter, QPainterPath, QPen, QPolygonF
 from PyQt5.QtWidgets import QStyleOptionGraphicsItem, QWidget
 
+from ui.UiUtils import draw_static_centered_text
 from widgets.Canvas import Canvas, CanvasScene, CanvasShape, CanvasView
 
 

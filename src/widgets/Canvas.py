@@ -35,11 +35,20 @@ class CanvasShape(QAbstractGraphicsShapeItem):
     def setPos(self, pos: QPointF):
         self._pos = pos
 
+    def pos(self):
+        return self._pos
+
     def setWidth(self, w: int):
         self._width = w
 
+    def width(self):
+        return self._width
+
     def setHeight(self, h: int):
         self._height = h
+
+    def height(self):
+        return self._height
 
     def boundingRect(self) -> QtCore.QRectF:
         return self.rect()
