@@ -9,8 +9,11 @@ from widgets.Canvas import Canvas, CanvasScene, CanvasShape, CanvasView
 
 
 class FlowShape(CanvasShape):
-    def __init__(self, *__args):
+    _title: str
+
+    def __init__(self, *__args, title=None):
         super().__init__(*__args)
+        self._title = title
         self.setWidth(120)
         self.setHeight(60)
         pen_shape_edge = QPen()
@@ -32,6 +35,7 @@ class FlowTrigger(FlowShape):
         painter.setPen(self.pen())
         painter.setBrush(self.brush())
         painter.drawRoundedRect(self.rect(), self._corner_roundness / 4, self._corner_roundness)
+        draw_static_centered_text(painter, self.pos(), 'Trigger')
 
 
 class FlowCondition(FlowShape):
@@ -58,6 +62,7 @@ class FlowCondition(FlowShape):
         painter.setPen(self.pen())
         painter.setBrush(self.brush())
         painter.drawPolygon(self._polygon)
+        draw_static_centered_text(painter, self.pos(), 'Is condition true?')
 
     def shape(self) -> QPainterPath:
         return self._shape
@@ -69,6 +74,7 @@ class FlowAction(FlowShape):
         painter.setBrush(self.brush())
         painter.fillRect(self.rect(), self.brush())
         painter.drawRect(self.rect())
+        draw_static_centered_text(painter, self.pos(), 'Action')
 
 
 class FlowScene(CanvasScene):

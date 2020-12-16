@@ -7,6 +7,7 @@ TODO
 - Don't store entire VENV in git -- see: https://stackoverflow.com/a/6590783/145771
 - I shouldn't represent the grid as a QGraphicsItem.
   Instead, I should draw it inside reimplementation of drawBackground().
+- Box text should be centered (needs using text instead of static text?)
 
 REMEMBER
 - use scene coordinates, not (necessarily) screen coordinates

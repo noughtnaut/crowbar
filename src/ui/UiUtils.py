@@ -1,7 +1,7 @@
 from typing import Union
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QMouseEvent, QWheelEvent, QDragMoveEvent
+from PyQt5.QtCore import QPointF, Qt
+from PyQt5.QtGui import QDragMoveEvent, QMouseEvent, QPainter, QStaticText, QWheelEvent
 from PyQt5.QtWidgets import QGraphicsSceneMouseEvent
 
 
@@ -69,3 +69,13 @@ def click_descriptor(event: _any_mouse_event, suffix: str):
             print("Unknown button:", event.button())
     action += suffix + "  -  (" + str(event.pos().x()) + ", " + str(event.pos().y()) + ")"
     return action
+
+
+def draw_static_centered_text(painter: QPainter, pos: QPointF, s: str):
+    text = QStaticText(s)  # FIXME Use drawText() instead of drawStaticText() to have multi-line text centered
+    text.setTextWidth(20)
+    half_size = QPointF(
+        text.size().width() / 2,
+        text.size().height() / 2
+    )
+    painter.drawStaticText(pos - half_size, text)
