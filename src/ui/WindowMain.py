@@ -52,12 +52,12 @@ class WindowMain(QMainWindow):
     def _create_menu(self):
         menu_file = self.menuBar().addMenu("&File")
         menu_file.addAction('&New Flow', self._do_new_flow)
-        menu_file.addAction('New &Group', self._do_new_group)
+        menu_file.addAction('New &Group …', self._do_new_group)
         menu_file.addSeparator()
         menu_file.addAction('&Quit', self._do_quit)
 
         menu_tools = self.menuBar().addMenu("&Tools")
-        menu_tools.addAction('&Options', self._do_NYI)
+        menu_tools.addAction('&Options …', self._do_NYI)
 
         menu_help = self.menuBar().addMenu("&Help")
         menu_help.addAction('&User Guide', self._do_NYI)
@@ -101,14 +101,14 @@ class WindowMain(QMainWindow):
         toolbar = ToolBar()
         toolbar.addAction('Run', self._do_NYI)
         toolbar.addSeparator()
-        toolbar.addAction('Triggers', self._do_NYI)
+        toolbar.addAction('Triggers …', self._do_NYI)
         toolbar.addSeparator(True)
         toolbar.addAction('Zoom In', self._do_view_zoom_in)
         toolbar.addAction('Zoom Out', self._do_view_zoom_out)
         toolbar.addAction('Zoom Reset', self._do_view_zoom_reset)
         toolbar.addAction('Zoom to Fit', self._do_view_zoom_to_fit)
         toolbar.addSeparator(True)
-        toolbar.addAction('Options', self._do_NYI)
+        toolbar.addAction('Options …', self._do_NYI)
         content.addToolBar(toolbar)
 
         self.canvas = Flow()
