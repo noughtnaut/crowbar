@@ -12,7 +12,7 @@ from widgets.canvas.Action import Action
 
 
 class WindowMain(QMainWindow):
-    _canvas: Canvas
+    _canvas: Canvas = None
 
     def __init__(self):
         super().__init__()
@@ -114,6 +114,7 @@ class WindowMain(QMainWindow):
         toolbar.addAction('Options …', self._do_NYI)
         content.addToolBar(toolbar)
 
+        self.setCanvas(Canvas())
         content.setCentralWidget(self.canvas())
 
         point1 = QPoint(0, 0)
@@ -129,9 +130,7 @@ class WindowMain(QMainWindow):
         return content
 
     def canvas(self):
-        if self._canvas is None:
-            self.setCanvas(Canvas())
-        return self.canvas()
+        return self._canvas
 
     def setCanvas(self, canvas: Canvas):
         self._canvas = canvas
