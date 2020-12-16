@@ -1,15 +1,18 @@
-from PyQt5.QtCore import QSettings, QSize
+from PyQt5.QtCore import QPoint, QSettings, QSize
 from PyQt5.QtGui import QMoveEvent, QResizeEvent
 from PyQt5.QtWidgets import *
 
 from src.ui.UiUtils import get_child
-from src.widgets.Flow import *
 from src.widgets.PanedWidget import PanedWidget
 from src.widgets.ToolBar import ToolBar
+from widgets.canvas.Canvas import Canvas
+from widgets.canvas.Trigger import Trigger
+from widgets.canvas.Condition import Condition
+from widgets.canvas.Action import Action
 
 
 class WindowMain(QMainWindow):
-    canvas: Flow
+    _canvas: Canvas
 
     def __init__(self):
         super().__init__()
@@ -111,20 +114,28 @@ class WindowMain(QMainWindow):
         toolbar.addAction('Options …', self._do_NYI)
         content.addToolBar(toolbar)
 
-        self.canvas = Flow()
-        content.setCentralWidget(self.canvas)
+        content.setCentralWidget(self.canvas())
 
         point1 = QPoint(0, 0)
         point2 = QPoint(0, 100)
         point3 = QPoint(0, 200)
-        box_trigger = FlowTrigger(point1)
-        box_condition = FlowCondition(point2)
-        box_action = FlowAction(point3)
-        self.canvas.scene.addItem(box_trigger)
-        self.canvas.scene.addItem(box_condition)
-        self.canvas.scene.addItem(box_action)
+        box_trigger = Trigger(point1, 'Trigger')
+        box_condition = Condition(point2, 'Condition')
+        box_action = Action(point3, 'Action')
+        self.canvas().scene.addItem(box_trigger)
+        self.canvas().scene.addItem(box_condition)
+        self.canvas().scene.addItem(box_action)
         self._do_view_zoom_reset()
         return content
+
+    def canvas(self):
+        if self._canvas is None:
+            self.setCanvas(Canvas())
+        return self.canvas()
+
+    def setCanvas(self, canvas: Canvas):
+        self._canvas = canvas
+        return self
 
     def _do_new_flow(self):
         print("Feel the flow, man")
@@ -133,21 +144,21 @@ class WindowMain(QMainWindow):
         print("Here's a new group for you.")
 
     def _do_view_zoom_in(self):
-        self.canvas.view.zoom_in()
+        self.canvas().view.zoom_in()
         print("Zoom in.")
 
     def _do_view_zoom_out(self):
-        self.canvas.view.zoom_out()
+        self.canvas().view.zoom_out()
         print("Zoom out.")
 
     def _do_view_zoom_reset(self):
-        self.canvas.view.zoom_to_fit()
-        self.canvas.view.zoom_reset()
+        self.canvas().view.zoom_to_fit()
+        self.canvas().view.zoom_reset()
         print("Back to normal.")
 
     def _do_view_zoom_to_fit(self):
-        self.canvas.view.zoom_to_fit()
-        self.canvas.view.zoom_out()
+        self.canvas().view.zoom_to_fit()
+        self.canvas().view.zoom_out()
         print("Zoing, now it fits.")
 
     def _do_quit(self):

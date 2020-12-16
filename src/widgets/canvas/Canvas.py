@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QBrush, QColor, QCursor, QMouseEvent, QPainter, QPen, QWheelEvent
+from PyQt5.QtGui import QBrush, QColor, QCursor, QMouseEvent, QPainter, QPen, QStaticText, QWheelEvent
 from PyQt5.QtWidgets import QAbstractGraphicsShapeItem, QFrame, QGraphicsItem, QGraphicsItemGroup, QGraphicsScene, \
     QGraphicsView, QGridLayout, QStyleOptionGraphicsItem, QWidget
 
@@ -18,37 +18,55 @@ class Canvas(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.view)
         self.setLayout(layout)
+        self.view.centerOn(QPointF(0, 0))
 
 
 class CanvasShape(QAbstractGraphicsShapeItem):
     _pos: QPointF
     _rect: QRectF
+    _title: str
 
-    def __init__(self, pos: QPointF, *__args):
+    def __init__(self, pos: QPointF = None, title: str = None, *__args):
         super().__init__(*__args)
         self.setPos(pos)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemSendsScenePositionChanges, True)
         self.setVisible(True)
-
-    def setPos(self, pos: QPointF):
-        self._pos = pos
+        self._title = title
+        self.setWidth(120)
+        self.setHeight(60)
+        pen_shape_edge = QPen()
+        pen_shape_edge.setWidth(2)
+        pen_shape_edge.setJoinStyle(Qt.RoundJoin)
+        pen_shape_edge.setCosmetic(True)
+        pen_shape_edge.setColor(QColor(192, 192, 192))
+        brush_shape_fill = QBrush()
+        brush_shape_fill.setColor(QColor(0, 0, 64))
+        brush_shape_fill.setStyle(Qt.SolidPattern)
+        self.setPen(pen_shape_edge)
+        self.setBrush(brush_shape_fill)
 
     def pos(self):
         return self._pos
 
-    def setWidth(self, w: int):
-        self._width = w
+    def setPos(self, pos: QPointF):
+        self._pos = QPointF(0, 0) if pos is None else pos
+        return self
 
     def width(self):
         return self._width
 
-    def setHeight(self, h: int):
-        self._height = h
+    def setWidth(self, w: int):
+        self._width = w if w > 0 else -w
+        return self
 
     def height(self):
         return self._height
+
+    def setHeight(self, h: int):
+        self._height = h if h > 0 else -h
+        return self
 
     def boundingRect(self) -> QtCore.QRectF:
         return self.rect()
@@ -60,6 +78,13 @@ class CanvasShape(QAbstractGraphicsShapeItem):
             self._width,
             self._height
         )
+
+    def title(self):
+        return self._title
+
+    def setTitle(self, title: str):
+        self._title = '' if title is None else title
+        return self
 
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.ItemPositionChange and self.scene():
@@ -78,11 +103,25 @@ class CanvasShape(QAbstractGraphicsShapeItem):
             return QGraphicsItem.itemChange(self, change, value)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
+        self.paintShape(painter)
+        self.paintTitle(painter)
+
+    def paintShape(self, painter: QPainter):
         r = self.boundingRect()
         painter.drawRect(r)
         painter.drawLine(r.topLeft(), r.bottomRight())
         painter.drawLine(r.bottomLeft(), r.topRight())
-        raise Exception('Override the paint() method in your subclass')
+        raise Exception('Override the paintShape() method in your subclass')
+
+    def paintTitle(self, painter: QPainter):
+        text = QStaticText(self.title())
+        text.setTextWidth(20)
+        half_size = QPointF(
+            text.size().width() / 2,
+            text.size().height() / 2
+        )
+        painter.drawStaticText(self.pos() - half_size, text)
+        # FIXME Use drawText() instead of drawStaticText() to have multi-line text centered
 
 
 class CanvasScene(QGraphicsScene):

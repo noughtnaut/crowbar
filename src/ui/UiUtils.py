@@ -70,12 +70,3 @@ def click_descriptor(event: _any_mouse_event, suffix: str):
     action += suffix + "  -  (" + str(event.pos().x()) + ", " + str(event.pos().y()) + ")"
     return action
 
-
-def draw_static_centered_text(painter: QPainter, pos: QPointF, s: str):
-    text = QStaticText(s)  # FIXME Use drawText() instead of drawStaticText() to have multi-line text centered
-    text.setTextWidth(20)
-    half_size = QPointF(
-        text.size().width() / 2,
-        text.size().height() / 2
-    )
-    painter.drawStaticText(pos - half_size, text)
