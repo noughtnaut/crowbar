@@ -8,6 +8,9 @@ from PyQt5.QtWidgets import QAbstractGraphicsShapeItem, QFrame, QGraphicsItem, Q
 
 from ui.UiUtils import click_descriptor, with_control_key
 
+_DEFAULT_SIZE_W = 120
+_DEFAULT_SIZE_H = 60
+
 
 class Canvas(QWidget):
     def __init__(self):
@@ -34,8 +37,8 @@ class CanvasShape(QAbstractGraphicsShapeItem):
         self.setFlag(QGraphicsItem.ItemSendsScenePositionChanges, True)
         self.setVisible(True)
         self._title = title
-        self.setWidth(120)
-        self.setHeight(60)
+        self.setWidth(_DEFAULT_SIZE_W)
+        self.setHeight(_DEFAULT_SIZE_H)
         pen_shape_edge = QPen()
         pen_shape_edge.setWidth(2)
         pen_shape_edge.setJoinStyle(Qt.RoundJoin)
@@ -86,21 +89,20 @@ class CanvasShape(QAbstractGraphicsShapeItem):
         self._title = '' if title is None else title
         return self
 
-    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, new_pos: Any) -> Any:
         if change == QGraphicsItem.ItemPositionChange and self.scene():
-            # value is the new position
-            rect = self.scene().sceneRect()
+            scene_rect = self.scene().sceneRect()
             # Keep the item inside the scene rect
-            if not rect.contains(value):
-                value.setX(min(rect.right(), max(value.x(), rect.left())))
-                value.setY(min(rect.bottom(), max(value.y(), rect.top())))
+            if not scene_rect.contains(new_pos):
+                new_pos.setX(min(scene_rect.right(), max(new_pos.x(), scene_rect.left())))
+                new_pos.setY(min(scene_rect.bottom(), max(new_pos.y(), scene_rect.top())))
             # Snap item to grid
-            grid_size = 10
-            x = round(value.x() / grid_size) * grid_size
-            y = round(value.y() / grid_size) * grid_size
+            grid_snap_increment = self.scene().grid_snap_increment()
+            x = round(new_pos.x() / grid_snap_increment) * grid_snap_increment
+            y = round(new_pos.y() / grid_snap_increment) * grid_snap_increment
             return QPointF(x, y)
         else:
-            return QGraphicsItem.itemChange(self, change, value)
+            return QGraphicsItem.itemChange(self, change, new_pos)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         self.paintShape(painter)
@@ -125,14 +127,25 @@ class CanvasShape(QAbstractGraphicsShapeItem):
 
 
 class CanvasScene(QGraphicsScene):
-    _grid_minor = 20
-    _grid_medium = 100
-    _grid_major = 500
+    _grid_line_increment = 20
+    _grid_snap_increment = 10
 
     def __init__(self):
         super().__init__()
         self.setSceneRect(-5000, -500, 10000, 10000)  # TODO This should be set outside of Canvas
         self._create_background_grid()
+
+    def grid_snap_increment(self):
+        return self._grid_snap_increment
+
+    def grid_minor(self):
+        return self._grid_line_increment
+
+    def grid_medium(self):
+        return self.grid_minor() * 5
+
+    def grid_major(self):
+        return self.grid_medium() * 5
 
     def _create_background_grid(self):
         self._group_grid = QGraphicsItemGroup()
@@ -146,30 +159,30 @@ class CanvasScene(QGraphicsScene):
         self._pen_grid_minor.setWidth(1)
         self._pen_grid_minor.setCosmetic(True)
         self._pen_grid_minor.setColor(QColor(0, 48, 0))
-        for x in range(int(scene_rect.left()), int(scene_rect.right()), self._grid_minor):
+        for x in range(int(scene_rect.left()), int(scene_rect.right()), self.grid_minor()):
             self._group_grid.addToGroup(
                 self.addLine(x, scene_rect.top(), x, scene_rect.bottom(), self._pen_grid_minor))
-        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self._grid_minor):
+        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self.grid_minor()):
             self._group_grid.addToGroup(
                 self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_minor))
         self._pen_grid_medium = QPen()
         self._pen_grid_medium.setWidth(2)
         self._pen_grid_medium.setCosmetic(True)
         self._pen_grid_medium.setColor(QColor(0, 56, 0))
-        for x in range(int(scene_rect.left()), int(scene_rect.right()), self._grid_medium):
+        for x in range(int(scene_rect.left()), int(scene_rect.right()), self.grid_medium()):
             self._group_grid.addToGroup(
                 self.addLine(x, scene_rect.top(), x, scene_rect.bottom(), self._pen_grid_medium))
-        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self._grid_medium):
+        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self.grid_medium()):
             self._group_grid.addToGroup(
                 self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_medium))
         self._pen_grid_major = QPen()
         self._pen_grid_major.setWidth(3)
         self._pen_grid_major.setCosmetic(True)
         self._pen_grid_major.setColor(QColor(0, 64, 0))
-        for x in range(int(scene_rect.left()), int(scene_rect.right()), self._grid_major):
+        for x in range(int(scene_rect.left()), int(scene_rect.right()), self.grid_major()):
             self._group_grid.addToGroup(
                 self.addLine(x, scene_rect.top(), x, scene_rect.bottom(), self._pen_grid_major))
-        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self._grid_major):
+        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self.grid_major()):
             self._group_grid.addToGroup(
                 self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_major))
         # Axis lines
