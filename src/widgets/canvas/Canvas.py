@@ -1,10 +1,10 @@
 from typing import Any, Optional
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import QPointF, QRectF, Qt
+from PyQt5.QtCore import QLineF, QPointF, QRect, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QCursor, QMouseEvent, QPainter, QPen, QStaticText, QWheelEvent
-from PyQt5.QtWidgets import QAbstractGraphicsShapeItem, QFrame, QGraphicsItem, QGraphicsItemGroup, QGraphicsScene, \
-    QGraphicsView, QGridLayout, QStyleOptionGraphicsItem, QWidget
+from PyQt5.QtWidgets import QAbstractGraphicsShapeItem, QFrame, QGraphicsItem, QGraphicsScene, QGraphicsView, \
+    QGridLayout, QStyleOptionGraphicsItem, QWidget
 
 from ui.UiUtils import click_descriptor, with_control_key
 
@@ -133,7 +133,7 @@ class CanvasScene(QGraphicsScene):
     def __init__(self):
         super().__init__()
         self.setSceneRect(-5000, -500, 10000, 10000)  # TODO This should be set outside of Canvas
-        self._create_background_grid()
+        self._prepare_background_grid()
 
     def grid_snap_increment(self):
         return self._grid_snap_increment
@@ -147,57 +147,82 @@ class CanvasScene(QGraphicsScene):
     def grid_major(self):
         return self.grid_medium() * 5
 
-    def _create_background_grid(self):
-        self._group_grid = QGraphicsItemGroup()
-        self.addItem(self._group_grid)
+    def _prepare_background_grid(self):
+        self._brush_background = QBrush(QColor(0, 24, 0))
 
-        self._brush_background = QBrush(QColor(0, 40, 0))
-        scene_rect = self.sceneRect()
-        self._group_grid.addToGroup(
-            self.addRect(scene_rect, QPen(), self._brush_background))
         self._pen_grid_minor = QPen()
         self._pen_grid_minor.setWidth(1)
         self._pen_grid_minor.setCosmetic(True)
-        self._pen_grid_minor.setColor(QColor(0, 48, 0))
-        for x in range(int(scene_rect.left()), int(scene_rect.right()), self.grid_minor()):
-            self._group_grid.addToGroup(
-                self.addLine(x, scene_rect.top(), x, scene_rect.bottom(), self._pen_grid_minor))
-        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self.grid_minor()):
-            self._group_grid.addToGroup(
-                self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_minor))
+        self._pen_grid_minor.setColor(QColor(0, 40, 0))
+
         self._pen_grid_medium = QPen()
         self._pen_grid_medium.setWidth(2)
         self._pen_grid_medium.setCosmetic(True)
-        self._pen_grid_medium.setColor(QColor(0, 56, 0))
-        for x in range(int(scene_rect.left()), int(scene_rect.right()), self.grid_medium()):
-            self._group_grid.addToGroup(
-                self.addLine(x, scene_rect.top(), x, scene_rect.bottom(), self._pen_grid_medium))
-        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self.grid_medium()):
-            self._group_grid.addToGroup(
-                self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_medium))
+        self._pen_grid_medium.setColor(QColor(0, 48, 0))
+
         self._pen_grid_major = QPen()
         self._pen_grid_major.setWidth(3)
         self._pen_grid_major.setCosmetic(True)
-        self._pen_grid_major.setColor(QColor(0, 64, 0))
-        for x in range(int(scene_rect.left()), int(scene_rect.right()), self.grid_major()):
-            self._group_grid.addToGroup(
-                self.addLine(x, scene_rect.top(), x, scene_rect.bottom(), self._pen_grid_major))
-        for y in range(int(scene_rect.top()), int(scene_rect.bottom()), self.grid_major()):
-            self._group_grid.addToGroup(
-                self.addLine(scene_rect.left(), y, scene_rect.right(), y, self._pen_grid_major))
-        # Axis lines
-        self._pen_grid_major.setColor(QColor(0, 96, 0))
-        self._group_grid.addToGroup(
-            self.addLine(0, scene_rect.top(), 0, scene_rect.bottom(), self._pen_grid_major))
-        self._group_grid.addToGroup(
-            self.addLine(scene_rect.left(), 0, scene_rect.right(), 0, self._pen_grid_major))
+        self._pen_grid_major.setColor(QColor(0, 56, 0))
 
-    def itemsBoundingRectWithoutGrid(self) -> QtCore.QRectF:
-        self.removeItem(self._group_grid)
-        r = self.itemsBoundingRect()
-        self.addItem(self._group_grid)
-        self._group_grid.setZValue(-1)
-        return r
+        self._pen_grid_axis = QPen()
+        self._pen_grid_axis.setWidth(3)
+        self._pen_grid_axis.setCosmetic(True)
+        self._pen_grid_axis.setColor(QColor(0, 80, 0))
+
+    def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
+        super().drawBackground(painter, rect)
+
+        # Calculate necessary grid with a bit of overshoot
+        # - this avoids edge glitches of background fill
+        # - this ensures all necessary grid lines are included
+        r = QRect(
+            rect.left() - self.grid_minor() - rect.left() % self.grid_minor(),
+            rect.top() - self.grid_minor() - rect.top() % self.grid_minor(),
+            rect.width() + 2 * (self.grid_minor() + rect.width() % self.grid_minor()),
+            rect.height() + 2 * (self.grid_minor() + rect.height() % self.grid_minor())
+        )
+
+        # Fill the background
+        painter.setBrush(self._brush_background)
+        painter.drawRect(r)
+
+        # Calculate necessary grid lines and sort them into bins
+        lines_minor = []
+        lines_medium = []
+        lines_major = []
+        lines_axis = []
+        for x in range(r.left(), r.right(), self.grid_minor()):
+            line = QLineF(x, r.top(), x, r.bottom())
+            if not x % self.grid_major():
+                lines_major.append(line)
+            elif not x % self.grid_medium():
+                lines_medium.append(line)
+            else:
+                lines_minor.append(line)
+        for y in range(r.top(), r.bottom(), self.grid_minor()):
+            line = QLineF(r.left(), y, r.right(), y)
+            if not y % self.grid_major():
+                lines_major.append(line)
+            elif not y % self.grid_medium():
+                lines_medium.append(line)
+            else:
+                lines_minor.append(line)
+        # Axis lines are simpler
+        lines_axis.append(QLineF(0, r.top(), 0, r.bottom()))
+        lines_axis.append(QLineF(r.left(), 0, r.right(), 0))
+        # Draw in order from minor to axis, so bright lines aren't chopped up by darker ones
+        pens_and_lines = [
+            (self._pen_grid_minor, lines_minor),
+            (self._pen_grid_medium, lines_medium),
+            (self._pen_grid_major, lines_major),
+            (self._pen_grid_axis, lines_axis)
+        ]
+        # TODO Might it be faster to pre-calculate all of the above (even if lines need to be longer)?
+        for (pen, lines) in pens_and_lines:
+            painter.setPen(pen)
+            for line in lines:
+                painter.drawLine(line)
 
 
 class CanvasView(QGraphicsView):
@@ -267,5 +292,5 @@ class CanvasView(QGraphicsView):
         self._zoom = self.transform().m11()
 
     def zoom_to_fit(self):
-        self.fitInView(self.scene().itemsBoundingRectWithoutGrid(), Qt.KeepAspectRatio)
+        self.fitInView(self.scene().itemsBoundingRect(), Qt.KeepAspectRatio)
         self._zoom = self.transform().m11()
