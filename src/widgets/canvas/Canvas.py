@@ -1,9 +1,11 @@
-from typing import Any, Optional
+import typing
+from typing import Any
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QLineF, QPointF, QRect, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QCursor, QMouseEvent, QPainter, QPen, QStaticText, QWheelEvent
-from PyQt5.QtWidgets import QAbstractGraphicsShapeItem, QFrame, QGraphicsItem, QGraphicsScene, QGraphicsView, \
+from PyQt5.QtWidgets import QFrame, QGraphicsItem, QGraphicsRectItem, QGraphicsScene, \
+    QGraphicsView, \
     QGridLayout, QStyleOptionGraphicsItem, QWidget
 
 from ui.UiUtils import click_descriptor, with_control_key
@@ -24,21 +26,22 @@ class Canvas(QWidget):
         self.view.centerOn(QPointF(0, 0))
 
 
-class CanvasShape(QAbstractGraphicsShapeItem):
-    _pos: QPointF
-    _rect: QRectF
+class CanvasShape(QGraphicsRectItem):
     _title: str
 
     def __init__(self, pos: QPointF = None, title: str = None, *__args):
-        super().__init__(*__args)
-        self.setPos(pos)
+        r = QRectF(
+            pos.x() - _DEFAULT_SIZE_W / 2,
+            pos.y() - _DEFAULT_SIZE_H / 2,
+            _DEFAULT_SIZE_W,
+            _DEFAULT_SIZE_H
+        )
+        super().__init__(r)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemSendsScenePositionChanges, True)
         self.setVisible(True)
         self._title = title
-        self.setWidth(_DEFAULT_SIZE_W)
-        self.setHeight(_DEFAULT_SIZE_H)
         pen_shape_edge = QPen()
         pen_shape_edge.setWidth(2)
         pen_shape_edge.setJoinStyle(Qt.RoundJoin)
@@ -51,36 +54,13 @@ class CanvasShape(QAbstractGraphicsShapeItem):
         self.setBrush(brush_shape_fill)
 
     def pos(self):
-        return self._pos
-
-    def setPos(self, pos: QPointF):
-        self._pos = QPointF(0, 0) if pos is None else pos
-        return self
+        return self.rect().center()  # TODO: Fully implement centre-based locations
 
     def width(self):
-        return self._width
-
-    def setWidth(self, w: int):
-        self._width = w if w > 0 else -w
-        return self
+        return self.rect().width()
 
     def height(self):
-        return self._height
-
-    def setHeight(self, h: int):
-        self._height = h if h > 0 else -h
-        return self
-
-    def boundingRect(self) -> QtCore.QRectF:
-        return self.rect()
-
-    def rect(self):
-        return QRectF(
-            self._pos.x() - self._width / 2,
-            self._pos.y() - self._height / 2,
-            self._width,
-            self._height
-        )
+        return self.rect().height()
 
     def title(self):
         return self._title
@@ -104,7 +84,8 @@ class CanvasShape(QAbstractGraphicsShapeItem):
         else:
             return QGraphicsItem.itemChange(self, change, new_pos)
 
-    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
+    def paint(self, painter: QtGui.QPainter, option: QStyleOptionGraphicsItem,
+              widget: typing.Optional[QWidget] = ...) -> None:
         self.paintShape(painter)
         self.paintTitle(painter)
 

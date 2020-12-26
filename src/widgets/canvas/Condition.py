@@ -12,10 +12,10 @@ class Condition(CanvasShape):
         super().__init__(*__args)
         self._polygon = QPolygonF()
         # Calculate by axis
-        top = QPoint(self._pos.x(), self._pos.y() - self._height / 2)
-        bot = QPoint(self._pos.x(), self._pos.y() + self._height / 2)
-        lef = QPoint(self._pos.x() - self._width / 2, self._pos.y())
-        rig = QPoint(self._pos.x() + self._width / 2, self._pos.y())
+        top = QPoint(self.pos().x(), self.pos().y() - self.height() / 2)
+        bot = QPoint(self.pos().x(), self.pos().y() + self.height() / 2)
+        lef = QPoint(self.pos().x() - self.width() / 2, self.pos().y())
+        rig = QPoint(self.pos().x() + self.width() / 2, self.pos().y())
         # Add points by clockwise order
         self._polygon.append(top)
         self._polygon.append(rig)
