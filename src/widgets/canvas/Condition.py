@@ -1,10 +1,10 @@
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QPainter, QPainterPath, QPolygonF
 
-from widgets.canvas.Canvas import CanvasShape
+from widgets.canvas.Canvas import Component
 
 
-class Condition(CanvasShape):
+class Condition(Component):
     _polygon: QPolygonF
     _shape: QPainterPath
 
@@ -29,6 +29,7 @@ class Condition(CanvasShape):
         return self._shape
 
     def paintShape(self, painter: QPainter):
+        painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(self.pen())
         painter.setBrush(self.brush())
-        painter.drawPolygon(self._polygon)
+        painter.drawConvexPolygon(self._polygon)

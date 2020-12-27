@@ -8,6 +8,9 @@ from ui.WindowMain import WindowMain
 
 
 class CrowbarApp(QApplication):
+    _window_main: WindowMain
+    _window_about: WindowAbout
+
     def __init__(self, argv: typing.List[str]):
         print('Hello, world!')
         super().__init__(argv)
@@ -20,11 +23,17 @@ class CrowbarApp(QApplication):
         # config = QSettings()  # Stores in `$HOME/.config/<self-org-name>/<self-app-name>.conf`
 
         print("loading main window")
-        self.window_main = WindowMain()
-        self.window_about = WindowAbout()
-        self.window_main.show()
+        self._window_main = WindowMain()
+        self._window_about = WindowAbout()
+        self._window_main.show()
 
     def run(self):
         print("starting event loop")
         self.exec_()
         print("event loop exited.")
+
+    def window_main(self):
+        return self._window_main
+
+    def window_about(self):
+        return self._window_about

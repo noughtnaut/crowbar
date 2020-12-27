@@ -1,32 +1,49 @@
+import enum
 import typing
 from typing import Any
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QLineF, QPointF, QRect, QRectF, Qt
-from PyQt5.QtGui import QBrush, QColor, QCursor, QMouseEvent, QPainter, QPen, QStaticText, QWheelEvent
-from PyQt5.QtWidgets import QFrame, QGraphicsItem, QGraphicsRectItem, QGraphicsScene, \
-    QGraphicsView, \
-    QGridLayout, QStyleOptionGraphicsItem, QWidget
+from PyQt5.QtGui import QBrush, QColor, QCursor, QMouseEvent, QPainter, QPen, QPolygonF, QStaticText, \
+    QWheelEvent
+from PyQt5.QtWidgets import QFrame, QGraphicsItem, QGraphicsPolygonItem, QGraphicsRectItem, QGraphicsScene, \
+    QGraphicsView, QGridLayout, QStyleOptionGraphicsItem, QWidget
 
 from ui.UiUtils import click_descriptor, with_control_key
 
-_DEFAULT_SIZE_W = 120
-_DEFAULT_SIZE_H = 60
+_DEFAULT_SIZE_W = 80
+_DEFAULT_SIZE_H = 80
 
 
-class Canvas(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.scene = CanvasScene()
-        self.view = CanvasView(self.scene, self)
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.view)
-        self.setLayout(layout)
-        self.view.centerOn(QPointF(0, 0))
+class Socket(enum.Enum):
+    """ This defines, in an abstract fashion, where on a Component a Wire is attached.
+        Calling `Component.socketPoint(s: Socket)` will return the concrete point, in scene coordinates.
+    """
+    NONE = 0
+    TOP = 1
+    BOTTOM = 2
+    LEFT = 4
+    RIGHT = 8
 
 
-class CanvasShape(QGraphicsRectItem):
+class Mode(enum.Enum):
+    """ This defines the usage and appearance of a Wire:
+        - NORMAL: This is the default exit path after completing the Component operation.
+        - TRUE: Applicable to Conditions, yields the exit path if the condition was TRUE.
+        - FALSE: Applicable to Conditions, yields the exit path if the condition was FALSE.
+        - ERROR: In case the Component operation caused an error, *only* paths of this mode will be followed.
+        Note:
+        - IF not specified, NORMAL is assumed.
+        - Components may have any number of exit paths of any types. Duplicate mode paths will fork the flow process,
+          while a Component with no exit paths will end the flow process.
+    """
+    NORMAL = 0
+    TRUE = 1
+    FALSE = 2
+    ERROR = 4
+
+
+class Component(QGraphicsRectItem):
     _title: str
 
     def __init__(self, pos: QPointF = None, title: str = None, *__args):
@@ -42,16 +59,18 @@ class CanvasShape(QGraphicsRectItem):
         self.setFlag(QGraphicsItem.ItemSendsScenePositionChanges, True)
         self.setVisible(True)
         self._title = title
-        pen_shape_edge = QPen()
-        pen_shape_edge.setWidth(2)
-        pen_shape_edge.setJoinStyle(Qt.RoundJoin)
-        pen_shape_edge.setCosmetic(True)
-        pen_shape_edge.setColor(QColor(192, 192, 192))
-        brush_shape_fill = QBrush()
-        brush_shape_fill.setColor(QColor(0, 0, 64))
-        brush_shape_fill.setStyle(Qt.SolidPattern)
-        self.setPen(pen_shape_edge)
-        self.setBrush(brush_shape_fill)
+        pen_component_edge = QPen()
+        pen_component_edge.setWidth(2)
+        pen_component_edge.setJoinStyle(Qt.RoundJoin)
+        pen_component_edge.setCosmetic(True)
+        pen_component_edge.setColor(QColor(192, 192, 192))
+        brush_component_fill = QBrush()
+        brush_component_fill.setColor(QColor(0, 0, 64))
+        brush_component_fill.setStyle(Qt.SolidPattern)
+        self.setPen(pen_component_edge)
+        self.setBrush(brush_component_fill)
+
+    # TODO Make Component deletable -- unless it's a Trigger
 
     def pos(self):
         return self.rect().center()  # TODO: Fully implement centre-based locations
@@ -86,6 +105,7 @@ class CanvasShape(QGraphicsRectItem):
 
     def paint(self, painter: QtGui.QPainter, option: QStyleOptionGraphicsItem,
               widget: typing.Optional[QWidget] = ...) -> None:
+        painter.setRenderHint(QPainter.Antialiasing)
         self.paintShape(painter)
         self.paintTitle(painter)
 
@@ -105,6 +125,79 @@ class CanvasShape(QGraphicsRectItem):
         )
         painter.drawStaticText(self.pos() - half_size, text)
         # FIXME Use drawText() instead of drawStaticText() to have multi-line text centered
+
+    def socketPoint(self, side: Socket):
+        if side == Socket.TOP:
+            return QPointF(self.pos().x(), self.rect().top())
+        if side == Socket.BOTTOM:
+            return QPointF(self.pos().x(), self.rect().bottom())
+        if side == Socket.LEFT:
+            return QPointF(self.rect().left(), self.pos().y())
+        if side == Socket.RIGHT:
+            return QPointF(self.rect().right(), self.pos().y())
+
+
+class Wire(QGraphicsPolygonItem):
+    _mode: Mode
+    _title: str
+
+    _color = {
+        Mode.NORMAL: QColor(192, 192, 192),  # white
+        Mode.TRUE: QColor(0, 192, 0),  # green
+        Mode.FALSE: QColor(192, 0, 0),  # red
+        Mode.ERROR: QColor(192, 192, 0),  # yellow
+    }
+
+    def __init__(self,
+                 from_component: Component, from_socket: Socket,
+                 to_component: Component, to_socket: Socket,
+                 mode: Mode = Mode.NORMAL,
+                 title: str = None):
+        super().__init__()
+        pen = QPen()
+        pen.setWidth(2)
+        pen.setJoinStyle(Qt.RoundJoin)
+        pen.setCapStyle(Qt.RoundCap)
+        pen.setCosmetic(True)
+        self.setPen(pen)
+        self.autoRoute(from_component, from_socket, to_component, to_socket)
+        self.setMode(mode)
+        self.setTitle(title)
+
+    def autoRoute(self,
+                  from_component: Component, from_socket: Socket,
+                  to_component: Component, to_socket: Socket):
+        new_path = QPolygonF()
+        new_path.append(from_component.socketPoint(from_socket))
+        # TODO Write label near source socket
+        # TODO Create I-, L-, or Z-shaped path, depending on socket directions
+        # TODO When routing, take into account other components, wires, labels, etc.
+        new_path.append(to_component.socketPoint(to_socket))
+        # TODO Add an arrow head
+        self.setPolygon(new_path)
+
+    def mode(self):
+        return self._mode
+
+    def setMode(self, mode):
+        self._mode = mode
+        p = self.pen()
+        p.setColor(self._color[self.mode()])
+        self.setPen(p)
+
+    def title(self):
+        return self._title
+
+    def setTitle(self, title: str):
+        self._title = '' if title is None else title
+        return self
+
+    def paint(self, painter: QtGui.QPainter, option: QStyleOptionGraphicsItem,
+              widget: typing.Optional[QWidget] = ...) -> None:
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(self.pen())
+        painter.drawPolyline(self.polygon())
+        # FIXME Paint wires *behind* components
 
 
 class CanvasScene(QGraphicsScene):
@@ -153,6 +246,7 @@ class CanvasScene(QGraphicsScene):
 
     def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
         super().drawBackground(painter, rect)
+        painter.setRenderHint(QPainter.Antialiasing)
 
         # Calculate necessary grid with a bit of overshoot
         # - this avoids edge glitches of background fill
@@ -275,3 +369,23 @@ class CanvasView(QGraphicsView):
     def zoom_to_fit(self):
         self.fitInView(self.scene().itemsBoundingRect(), Qt.KeepAspectRatio)
         self._zoom = self.transform().m11()
+
+
+class Canvas(QWidget):
+    _scene: CanvasScene
+    _view: CanvasView
+
+    def __init__(self):
+        super().__init__()
+        self._scene = CanvasScene()
+        self._view = CanvasView(self._scene, self)
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.view())
+        self.setLayout(layout)
+
+    def scene(self):
+        return self._scene
+
+    def view(self):
+        return self._view

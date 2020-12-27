@@ -5,10 +5,10 @@ from PyQt5.QtWidgets import *
 from src.ui.UiUtils import get_child
 from src.widgets.PanedWidget import PanedWidget
 from src.widgets.ToolBar import ToolBar
-from widgets.canvas.Canvas import Canvas
-from widgets.canvas.Trigger import Trigger
-from widgets.canvas.Condition import Condition
 from widgets.canvas.Action import Action
+from widgets.canvas.Canvas import Canvas, Mode, Socket, Wire
+from widgets.canvas.Condition import Condition
+from widgets.canvas.Trigger import Trigger
 
 
 class WindowMain(QMainWindow):
@@ -116,18 +116,38 @@ class WindowMain(QMainWindow):
 
         self.setCanvas(Canvas())
         content.setCentralWidget(self.canvas())
+        scene = self.canvas().scene()
 
-        point1 = QPoint(0, 0)
-        point2 = QPoint(0, 100)
-        point3 = QPoint(0, 200)
-        box_trigger = Trigger(point1, 'Trigger')
-        box_condition = Condition(point2, 'Condition')
-        box_action = Action(point3, 'Action')
-        self.canvas().scene.addItem(box_trigger)
-        self.canvas().scene.addItem(box_condition)
-        self.canvas().scene.addItem(box_action)
+        self.create_sample_flow(scene)
+
         self._do_view_zoom_reset()
         return content
+
+    def create_sample_flow(self, scene):
+        point1 = QPoint(0, 0)
+        point2 = QPoint(0, 140)
+        point3 = QPoint(0, 280)
+        point4 = QPoint(140, 280)
+        box_trigger = Trigger(point1, 'Trigger')
+        box_condition = Condition(point2, 'Condition')
+        box_action1 = Action(point3, 'Action 1')
+        box_action2 = Action(point4, 'Action 2')
+        scene.addItem(box_trigger)
+        scene.addItem(box_condition)
+        scene.addItem(box_action1)
+        scene.addItem(box_action2)
+
+        wire1 = Wire(box_trigger, Socket.BOTTOM,
+                     box_condition, Socket.TOP)
+        wire2 = Wire(box_condition, Socket.BOTTOM,
+                     box_action1, Socket.TOP
+                     , Mode.TRUE)
+        wire3 = Wire(box_condition, Socket.RIGHT,
+                     box_action2, Socket.LEFT
+                     , Mode.FALSE)
+        scene.addItem(wire1)
+        scene.addItem(wire2)
+        scene.addItem(wire3)
 
     def canvas(self):
         return self._canvas
@@ -143,28 +163,28 @@ class WindowMain(QMainWindow):
         print("Here's a new group for you.")
 
     def _do_view_zoom_in(self):
-        self.canvas().view.zoom_in()
+        self.canvas().view().zoom_in()
         print("Zoom in.")
 
     def _do_view_zoom_out(self):
-        self.canvas().view.zoom_out()
+        self.canvas().view().zoom_out()
         print("Zoom out.")
 
     def _do_view_zoom_reset(self):
-        self.canvas().view.zoom_to_fit()
-        self.canvas().view.zoom_reset()
+        self.canvas().view().zoom_to_fit()
+        self.canvas().view().zoom_reset()
         print("Back to normal.")
 
     def _do_view_zoom_to_fit(self):
-        self.canvas().view.zoom_to_fit()
-        self.canvas().view.zoom_out()
+        self.canvas().view().zoom_to_fit()
+        self.canvas().view().zoom_out()
         print("Zoing, now it fits.")
 
     def _do_quit(self):
         self.close()
 
     def _do_show_about(self):
-        qApp.instance().window_about.show()  # TODO Why is `instance()` required here?
+        qApp.instance().window_about().show()
         print("Ain't that shiny?")
 
     def _do_NYI(self):
