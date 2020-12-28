@@ -6,7 +6,9 @@ from src.ui.UiUtils import get_child
 from src.widgets.PanedWidget import PanedWidget
 from src.widgets.ToolBar import ToolBar
 from widgets.canvas.Action import Action
-from widgets.canvas.Canvas import Canvas, Mode, Socket, Wire
+from widgets.canvas.core.Canvas import Canvas
+from widgets.canvas.core.Enums import Mode, Socket
+from widgets.canvas.core.Wire import Wire
 from widgets.canvas.Condition import Condition
 from widgets.canvas.Trigger import Trigger
 

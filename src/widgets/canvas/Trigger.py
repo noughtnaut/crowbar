@@ -1,6 +1,6 @@
 from PyQt5.QtGui import QPainter
 
-from widgets.canvas.Canvas import Component
+from widgets.canvas.core.Component import Component
 
 
 class Trigger(Component):
