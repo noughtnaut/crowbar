@@ -19,14 +19,14 @@ class WindowMain(QMainWindow):
     def __init__(self):
         super().__init__()
         self.restoreSettings()
-
         self._create_menu()
         self._create_status_bar()
         self._create_content()
 
-    def close(self):
+    def closeEvent(self, event):
         self.storeSettings()
-        super().close()
+        super().closeEvent(event)
+        qApp.instance().do_quit_cleanup()
 
     def resizeEvent(self, e: QResizeEvent):
         self.storeSettings()
@@ -178,16 +178,13 @@ class WindowMain(QMainWindow):
 
     def _do_view_zoom_in(self):
         self.canvas().view().zoom_in()
-        print("Zoom in.")
 
     def _do_view_zoom_out(self):
         self.canvas().view().zoom_out()
-        print("Zoom out.")
 
     def _do_view_zoom_reset(self):
         self.canvas().view().zoom_to_fit()
         self.canvas().view().zoom_reset()
-        print("Back to normal.")
 
     def _do_view_zoom_to_fit(self):
         self.canvas().view().zoom_to_fit()
@@ -199,7 +196,6 @@ class WindowMain(QMainWindow):
 
     def _do_show_about(self):
         qApp.instance().window_about().show()
-        print("Ain't that shiny?")
 
     def _do_NYI(self):
         print("<Not yet implemented>")

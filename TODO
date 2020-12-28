@@ -1,6 +1,4 @@
 TODO
-- Make rudimentary lines work
-  - Use QGraphicsPathItem for connectors ... probably
 - Add logging for debugging etc.
 - Create a dummy folder/flow data structure, and play with the left pane
 - Make resources work like they do in Designer
@@ -8,17 +6,6 @@ TODO
 - Moving a Component must also cause all attached wires to adjust
 - Deleting a Component must delete all attached Wires.
 - External links in README should point to archive.org
-
-REF
-- Qt5 Tutorial Customizing Items by inheriting QGraphicsItem
-  https://www.bogotobogo.com/Qt/Qt5_QGraphicsView_QGraphicsScene_QGraphicsItems.php
-- Session Management
-  https://doc.qt.io/qt-5/session.html
-
-- https://www.bogotobogo.com/Qt/Qt5_QGraphicsView_QGraphicsScene_QGraphicsItems.php
-- https://www.bogotobogo.com/Qt/Qt5_QTreeWidget.php
-
-- When moving a selection of several items, perhaps need to temporarily wrap them in a group.
 
 
 TERMINOLOGY
@@ -36,3 +23,6 @@ My idea with Wires (arrow lines) is to have each Component have 'anchor' points 
 
 
 MISC. NOTES ('cuz I'm still a Python newbie)
+
+- https://www.bogotobogo.com/Qt/Qt5_QTreeWidget.php
+- When moving a selection of several items, perhaps need to temporarily wrap them in a group.

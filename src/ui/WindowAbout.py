@@ -1,6 +1,6 @@
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QResizeEvent
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import *
 
 
@@ -43,6 +43,3 @@ class WindowAbout(QDialog):
         button_box.rejected.connect(self.reject)
 
         layout.addWidget(button_box)
-
-    def resizeEvent(self, event: QResizeEvent):
-        print("size:", self.size())
