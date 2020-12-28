@@ -125,9 +125,9 @@ class WindowMain(QMainWindow):
 
     def create_sample_flow(self, scene):
         point1 = QPoint(0, 0)
-        point2 = QPoint(0, 140)
-        point3 = QPoint(0, 280)
-        point4 = QPoint(140, 280)
+        point2 = QPoint(0, 160)
+        point3 = QPoint(0, 320)
+        point4 = QPoint(160, 320)
         box_trigger = Trigger(point1, 'Trigger')
         box_condition = Condition(point2, 'Condition')
         box_action1 = Action(point3, 'Action 1')
@@ -145,9 +145,21 @@ class WindowMain(QMainWindow):
         wire3 = Wire(box_condition, Socket.RIGHT,
                      box_action2, Socket.LEFT
                      , Mode.FALSE)
+        wire4 = Wire(box_condition, Socket.RIGHT,
+                     box_action2, Socket.TOP
+                     , Mode.NORMAL)
+        wire5 = Wire(box_condition, Socket.RIGHT,
+                     box_action2, Socket.RIGHT
+                     , Mode.TRUE)
+        wire6 = Wire(box_condition, Socket.RIGHT,
+                     box_action2, Socket.BOTTOM
+                     , Mode.ERROR)
         scene.addItem(wire1)
         scene.addItem(wire2)
         scene.addItem(wire3)
+        scene.addItem(wire4)
+        scene.addItem(wire5)
+        scene.addItem(wire6)
 
     def canvas(self):
         return self._canvas

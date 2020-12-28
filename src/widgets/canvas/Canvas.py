@@ -21,9 +21,19 @@ class Socket(enum.Enum):
     """
     NONE = 0
     TOP = 1
-    BOTTOM = 2
+    RIGHT = 2
+    BOTTOM = 3
     LEFT = 4
-    RIGHT = 8
+    # TODO The above represents socket "facing"; for RAS we will need several sockets on the same face,
+    # TODO and also socket type, order (incl. grouping/spacers), name, etc.
+
+    def opposing(self, s) -> bool:
+        """ Return TRUE if the two sockets are facing in opposite directions (up/down or left/right).
+            Does not take into account whether they are facing one-another (they might be facing away).
+        """
+        if abs(s.value - self.value) == 2:
+            return True
+        return False
 
 
 class Mode(enum.Enum):
@@ -71,9 +81,12 @@ class Component(QGraphicsRectItem):
         self.setBrush(brush_component_fill)
 
     # TODO Make Component deletable -- unless it's a Trigger
+    # TODO Set cursor on hover: crosshair near anchors to hint wiring, hand in body to hint moving
+    # Qt.CrossCursor, Qt.OpenHandCursor
+    # TODO Display manipulators on hover: buttons for editing component
 
     def pos(self):
-        return self.rect().center()  # TODO: Fully implement centre-based locations
+        return self.rect().center()
 
     def width(self):
         return self.rect().width()
@@ -138,6 +151,9 @@ class Component(QGraphicsRectItem):
 
 
 class Wire(QGraphicsPolygonItem):
+    # FIXME Wires must belong to the component they originate at, so that the component knows its exit paths.
+    # FIXME Source components must also request wires to re-route when the component moves.
+    # FIXME Destination components must also (be able to!) request wires to re-route when the component moves.
     _mode: Mode
     _title: str
 
@@ -164,16 +180,95 @@ class Wire(QGraphicsPolygonItem):
         self.setMode(mode)
         self.setTitle(title)
 
+    # TODO Set cursor on hover: col/row-resize over path segments to hint manually adjusting paths
+    # Qt.SizeVerCursor, Qt.SizeHorCursor
+    # Qt.SplitVCursor, Qt.SplitHCursor
+    # TODO Double-click a path segment to convert it to a Z-bend (adjust neighbours by half)
+    # TODO Ctrl-double-click a path segment to remove a Z-bend (if possible)
+
     def autoRoute(self,
                   from_component: Component, from_socket: Socket,
                   to_component: Component, to_socket: Socket):
+        # Routing rules:
+        # - If the wire can be straight, let it be straight.
+        #   This requires the sockets to be opposing and aligned.
+        # - If the sockets are not aligned with the ideal routing, go straight out for 20px before turning.
+        #   This gives the wire some distance from the component, and also provides a space for the arrow head.
+        # - If the wire must wrap around a component to reach its socket, also keep 20px of distance.
+        # - If we need to make a Z-bend, let the zig intersect the zag down the middle.
+        #   This is mainly for pleasing symmetry. We should be able to manually adjust routes later on.
         new_path = QPolygonF()
+        # First point
         new_path.append(from_component.socketPoint(from_socket))
-        # TODO Write label near source socket
-        # TODO Create I-, L-, or Z-shaped path, depending on socket directions
-        # TODO When routing, take into account other components, wires, labels, etc.
+
+        delta_x = to_component.pos().x() - from_component.pos().x()
+        delta_y = to_component.pos().y() - from_component.pos().y()
+
+        # TODO It must be possible to normalize/optimize this to cut down on the number of branches
+        # Idea: Introduce a point 20px out from each socket, no matter where we're going?
+        #       - This would free us from having to consider the "facing" of sockets!
+        #       - This might result in artifacts when manually adjusting routes later on, but that's acceptable.
+        # Idea: Implement routing between arbitrary points as an incremental path builder?
+        if delta_x > 0:  # Going right
+            if delta_y > 0:  # Going down
+                if from_socket == Socket.TOP:
+                    pass  # TODO This is just a stupid amount of code I really don't wanna write
+                elif from_socket == Socket.RIGHT:
+                    if to_socket == Socket.TOP:
+                        new_path.append(QPointF(
+                            to_component.socketPoint(to_socket).x(),
+                            from_component.socketPoint(from_socket).y()
+                        ))
+                    elif to_socket == Socket.RIGHT:
+                        new_path.append(QPointF(
+                            to_component.socketPoint(to_socket).x() + 20,
+                            from_component.socketPoint(from_socket).y()
+                        ))
+                        new_path.append(QPointF(
+                            to_component.socketPoint(to_socket).x() + 20,
+                            to_component.socketPoint(to_socket).y()
+                        ))
+                    elif to_socket == Socket.BOTTOM:
+                        new_path.append(QPointF(
+                            from_component.socketPoint(from_socket).x() + (delta_x - to_component.width()) / 2,
+                            from_component.socketPoint(from_socket).y()
+                        ))
+                        new_path.append(QPointF(
+                            from_component.socketPoint(from_socket).x() + (delta_x - to_component.width()) / 2,
+                            to_component.socketPoint(to_socket).y() + 20
+                        ))
+                        new_path.append(QPointF(
+                            to_component.socketPoint(to_socket).x(),
+                            to_component.socketPoint(to_socket).y() + 20
+                        ))
+                    elif to_socket == Socket.LEFT:
+                        new_path.append(QPointF(
+                            from_component.socketPoint(from_socket).x() + (delta_x - to_component.width()) / 2,
+                            from_component.socketPoint(from_socket).y()
+                        ))
+                        new_path.append(QPointF(
+                            from_component.socketPoint(from_socket).x() + (delta_x - to_component.width()) / 2,
+                            to_component.socketPoint(to_socket).y()
+                        ))
+                elif from_socket == Socket.BOTTOM:
+                    pass  # TODO
+                elif from_socket == Socket.LEFT:
+                    pass  # TODO
+            elif delta_y < 0:  # Going up
+                pass  # TODO
+            # else: Going horizontally
+        elif delta_x < 0:  # Going left
+            if delta_y > 0:  # Going down
+                pass  # TODO
+            elif delta_y < 0:  # Going up
+                pass  # TODO
+            # else: Going horizontally
+        # else: Going nowhere!
+
+        # Last point
         new_path.append(to_component.socketPoint(to_socket))
         # TODO Add an arrow head
+        # TODO Write label near source socket
         self.setPolygon(new_path)
 
     def mode(self):
@@ -202,11 +297,14 @@ class Wire(QGraphicsPolygonItem):
 
 class CanvasScene(QGraphicsScene):
     _grid_line_increment = 20
-    _grid_snap_increment = 10
+    _grid_snap_increment = 20
 
     def __init__(self):
         super().__init__()
         self.setSceneRect(-5000, -500, 10000, 10000)  # TODO This should be set outside of Canvas
+        # TODO Ideally, the canvas should be 'boundless', adjusted on the fly as needed, with no scroll bars
+        # TODO Set cursor on hover: hand when over canvas to hint panning the view
+        # Qt.OpenHandCursor
         self._prepare_background_grid()
 
     def grid_snap_increment(self):
@@ -216,10 +314,10 @@ class CanvasScene(QGraphicsScene):
         return self._grid_line_increment
 
     def grid_medium(self):
-        return self.grid_minor() * 5
+        return self.grid_minor() * 2
 
     def grid_major(self):
-        return self.grid_medium() * 5
+        return self.grid_medium() * 4
 
     def _prepare_background_grid(self):
         self._brush_background = QBrush(QColor(0, 24, 0))

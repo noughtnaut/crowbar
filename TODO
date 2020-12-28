@@ -7,6 +7,7 @@ TODO
 - Component titles should be centered (needs using text instead of static text?)
 - Moving a Component must also cause all attached wires to adjust
 - Deleting a Component must delete all attached Wires.
+- External links in README should point to archive.org
 
 REF
 - Qt5 Tutorial Customizing Items by inheriting QGraphicsItem
