@@ -31,6 +31,11 @@ class Component(QGraphicsRectItem):
         self.setFlag(QGraphicsItem.ItemSendsScenePositionChanges, True)
         self.setVisible(True)
         self._title = title
+        self.initPainter()
+        self._wiring_in = []
+        self._wiring_out = []
+
+    def initPainter(self):
         pen_component_edge = QPen()
         pen_component_edge.setWidth(2)
         pen_component_edge.setJoinStyle(Qt.RoundJoin)
@@ -75,6 +80,12 @@ class Component(QGraphicsRectItem):
             x = round(new_pos.x() / grid_snap_increment) * grid_snap_increment
             y = round(new_pos.y() / grid_snap_increment) * grid_snap_increment
             return QPointF(x, y)
+        elif change == QGraphicsItem.ItemPositionHasChanged and self.scene():
+            # FIXME Why is `autoRoute()` still seeing the original component positions?
+            for wire in self._wiring_in:
+                wire.autoRoute()
+            for wire in self._wiring_out:
+                wire.autoRoute()
         else:
             return QGraphicsItem.itemChange(self, change, new_pos)
 
@@ -114,5 +125,9 @@ class Component(QGraphicsRectItem):
     def addInputWire(self, wire: Wire):
         self._wiring_in.append(wire)
 
+    # TODO removeInputWire()
+
     def addOutputWire(self, wire: Wire):
         self._wiring_out.append(wire)
+
+    # TODO removeOutputWire()

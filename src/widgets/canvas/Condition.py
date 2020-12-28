@@ -10,6 +10,9 @@ class Condition(Component):
 
     def __init__(self, *__args):
         super().__init__(*__args)
+        self.initShape()
+
+    def initShape(self):
         self._polygon = QPolygonF()
         # Calculate by axis
         top = QPoint(self.pos().x(), self.pos().y() - self.height() / 2)

@@ -15,6 +15,10 @@ class Wire(QGraphicsPolygonItem):
     # FIXME Destination components must also (be able to!) request wires to re-route when the component moves.
     _mode: Mode
     _title: str
+    _from_component: Component
+    _from_socket: Socket
+    _to_component: Component
+    _to_socket: Socket
 
     _color = {
         Mode.NORMAL: QColor(192, 192, 192),  # white
@@ -29,15 +33,24 @@ class Wire(QGraphicsPolygonItem):
                  mode: Mode = Mode.NORMAL,
                  title: str = None):
         super().__init__()
+        self.initPainter()
+        self.setMode(mode)
+        self.setTitle(title)
+        self._from_component = from_component
+        self._from_socket = from_socket
+        self._to_component = to_component
+        self._to_socket = to_socket
+        self._from_component.addOutputWire(self)
+        self._to_component.addInputWire(self)
+        self.autoRoute()
+
+    def initPainter(self):
         pen = QPen()
         pen.setWidth(2)
         pen.setJoinStyle(Qt.RoundJoin)
         pen.setCapStyle(Qt.RoundCap)
         pen.setCosmetic(True)
         self.setPen(pen)
-        self.autoRoute(from_component, from_socket, to_component, to_socket)
-        self.setMode(mode)
-        self.setTitle(title)
 
     # TODO Set cursor on hover: col/row-resize over path segments to hint manually adjusting paths
     # Qt.SizeVerCursor, Qt.SizeHorCursor
@@ -45,9 +58,7 @@ class Wire(QGraphicsPolygonItem):
     # TODO Double-click a path segment to convert it to a Z-bend (adjust neighbours by half)
     # TODO Ctrl-double-click a path segment to remove a Z-bend (if possible)
 
-    def autoRoute(self,
-                  from_component: Component, from_socket: Socket,
-                  to_component: Component, to_socket: Socket):
+    def autoRoute(self):
         # Routing rules:
         # - If the wire can be straight, let it be straight.
         #   This requires the sockets to be opposing and aligned.
@@ -58,10 +69,10 @@ class Wire(QGraphicsPolygonItem):
         #   This is mainly for pleasing symmetry. We should be able to manually adjust routes later on.
         new_path = QPolygonF()
         # First point
-        new_path.append(from_component.socketPoint(from_socket))
+        new_path.append(self._from_component.socketPoint(self._from_socket))
 
-        delta_x = to_component.pos().x() - from_component.pos().x()
-        delta_y = to_component.pos().y() - from_component.pos().y()
+        delta_x = self._to_component.pos().x() - self._from_component.pos().x()
+        delta_y = self._to_component.pos().y() - self._from_component.pos().y()
 
         # TODO It must be possible to normalize/optimize this to cut down on the number of branches
         # Idea: Introduce a point 20px out from each socket, no matter where we're going?
@@ -70,48 +81,52 @@ class Wire(QGraphicsPolygonItem):
         # Idea: Implement routing between arbitrary points as an incremental path builder?
         if delta_x > 0:  # Going right
             if delta_y > 0:  # Going down
-                if from_socket == Socket.TOP:
+                if self._from_socket == Socket.TOP:
                     pass  # TODO This is just a stupid amount of code I really don't wanna write
-                elif from_socket == Socket.RIGHT:
-                    if to_socket == Socket.TOP:
+                elif self._from_socket == Socket.RIGHT:
+                    if self._to_socket == Socket.TOP:
                         new_path.append(QPointF(
-                            to_component.socketPoint(to_socket).x(),
-                            from_component.socketPoint(from_socket).y()
+                            self._to_component.socketPoint(self._to_socket).x(),
+                            self._from_component.socketPoint(self._from_socket).y()
                         ))
-                    elif to_socket == Socket.RIGHT:
+                    elif self._to_socket == Socket.RIGHT:
                         new_path.append(QPointF(
-                            to_component.socketPoint(to_socket).x() + 20,
-                            from_component.socketPoint(from_socket).y()
-                        ))
-                        new_path.append(QPointF(
-                            to_component.socketPoint(to_socket).x() + 20,
-                            to_component.socketPoint(to_socket).y()
-                        ))
-                    elif to_socket == Socket.BOTTOM:
-                        new_path.append(QPointF(
-                            from_component.socketPoint(from_socket).x() + (delta_x - to_component.width()) / 2,
-                            from_component.socketPoint(from_socket).y()
+                            self._to_component.socketPoint(self._to_socket).x() + 20,
+                            self._from_component.socketPoint(self._from_socket).y()
                         ))
                         new_path.append(QPointF(
-                            from_component.socketPoint(from_socket).x() + (delta_x - to_component.width()) / 2,
-                            to_component.socketPoint(to_socket).y() + 20
+                            self._to_component.socketPoint(self._to_socket).x() + 20,
+                            self._to_component.socketPoint(self._to_socket).y()
+                        ))
+                    elif self._to_socket == Socket.BOTTOM:
+                        new_path.append(QPointF(
+                            self._from_component.socketPoint(self._from_socket).x()
+                            + (delta_x - self._to_component.width()) / 2,
+                            self._from_component.socketPoint(self._from_socket).y()
                         ))
                         new_path.append(QPointF(
-                            to_component.socketPoint(to_socket).x(),
-                            to_component.socketPoint(to_socket).y() + 20
-                        ))
-                    elif to_socket == Socket.LEFT:
-                        new_path.append(QPointF(
-                            from_component.socketPoint(from_socket).x() + (delta_x - to_component.width()) / 2,
-                            from_component.socketPoint(from_socket).y()
+                            self._from_component.socketPoint(self._from_socket).x()
+                            + (delta_x - self._to_component.width()) / 2,
+                            self._to_component.socketPoint(self._to_socket).y() + 20
                         ))
                         new_path.append(QPointF(
-                            from_component.socketPoint(from_socket).x() + (delta_x - to_component.width()) / 2,
-                            to_component.socketPoint(to_socket).y()
+                            self._to_component.socketPoint(self._to_socket).x(),
+                            self._to_component.socketPoint(self._to_socket).y() + 20
                         ))
-                elif from_socket == Socket.BOTTOM:
+                    elif self._to_socket == Socket.LEFT:
+                        new_path.append(QPointF(
+                            self._from_component.socketPoint(self._from_socket).x()
+                            + (delta_x - self._to_component.width()) / 2,
+                            self._from_component.socketPoint(self._from_socket).y()
+                        ))
+                        new_path.append(QPointF(
+                            self._from_component.socketPoint(self._from_socket).x()
+                            + (delta_x - self._to_component.width()) / 2,
+                            self._to_component.socketPoint(self._to_socket).y()
+                        ))
+                elif self._from_socket == Socket.BOTTOM:
                     pass  # TODO
-                elif from_socket == Socket.LEFT:
+                elif self._from_socket == Socket.LEFT:
                     pass  # TODO
             elif delta_y < 0:  # Going up
                 pass  # TODO
@@ -125,7 +140,7 @@ class Wire(QGraphicsPolygonItem):
         # else: Going nowhere!
 
         # Last point
-        new_path.append(to_component.socketPoint(to_socket))
+        new_path.append(self._to_component.socketPoint(self._to_socket))
         # TODO Add an arrow head
         # TODO Write label near source socket
         self.setPolygon(new_path)
