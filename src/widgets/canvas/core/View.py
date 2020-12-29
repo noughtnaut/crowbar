@@ -29,20 +29,20 @@ class CanvasView(QGraphicsView):
         super().mouseMoveEvent(event)
         # Panning canvas while click-and-dragging the background
         if self._pan_from is not None:
-            if self._pan_to is not None:
-                self._pan_to = self.mapToScene(event.pos())
-                delta = self._pan_to - self._pan_from
-                self.setTransformationAnchor(QGraphicsView.NoAnchor)
-                self.translate(delta.x(), delta.y())
+            self._pan_to = self.mapToScene(event.pos())
+            delta = self._pan_to - self._pan_from
+            self.setTransformationAnchor(QGraphicsView.NoAnchor)
+            self.translate(delta.x(), delta.y())
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         # print(click_descriptor(event, 'click'))
         super().mousePressEvent(event)
+        target = self.itemAt(event.pos())
         # Start panning canvas if click-and-dragging the background
-        if click_descriptor(event) == "left-" and self.itemAt(event.pos()) is None:
+        if click_descriptor(event) == "left-" and target is None:
             self.setCursor(Qt.ClosedHandCursor)
             self._pan_from = self.mapToScene(event.pos())
-            self._pan_to = None
+            self._pan_to = self._pan_from
 
     def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
         # print(click_descriptor(event, 'double-click'))
