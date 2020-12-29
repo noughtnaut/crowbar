@@ -3,6 +3,12 @@ from PyQt5.QtCore import QLineF, QPoint, QRect
 from PyQt5.QtGui import QBrush, QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGraphicsScene
 
+from widgets.canvas.Action import Action
+from widgets.canvas.Condition import Condition
+from widgets.canvas.Trigger import Trigger
+from widgets.canvas.core.Enums import Mode, Socket
+from widgets.canvas.core.Wire import Wire
+
 
 class CanvasScene(QGraphicsScene):
     _grid_line_increment = 20
@@ -13,6 +19,7 @@ class CanvasScene(QGraphicsScene):
         self.setSceneRect(-5000, -500, 10000, 10000)  # TODO This should be set outside of Canvas
         # TODO Ideally, the canvas should be 'boundless', adjusted on the fly as needed, with no scroll bars
         self._prepare_background()
+        self.create_sample_flow()
 
     def grid_snap_increment(self):
         return self._grid_snap_increment
@@ -121,3 +128,43 @@ class CanvasScene(QGraphicsScene):
             painter.setPen(pen)
             for line in lines:
                 painter.drawLine(line)
+
+    def create_sample_flow(self):
+        # TODO Find a better place for the Trigger, which should be a fixture rather than part of a 'sample'.
+        point1 = QPoint(0, 0)
+        point2 = QPoint(0, 160)
+        point3 = QPoint(0, 320)
+        point4 = QPoint(160, 320)
+        box_trigger = Trigger(point1, 'Trigger')
+        box_condition = Condition(point2, 'Condition')
+        box_action1 = Action(point3, 'Action 1')
+        box_action2 = Action(point4, 'Action 2')
+        self.addItem(box_trigger)
+        self.addItem(box_condition)
+        self.addItem(box_action1)
+        self.addItem(box_action2)
+
+        wire1 = Wire(box_trigger, Socket.BOTTOM,
+                     box_condition, Socket.TOP)
+        wire2 = Wire(box_condition, Socket.BOTTOM,
+                     box_action1, Socket.TOP
+                     , Mode.TRUE)
+        # TODO So far, autorouting is only supported from Socket.RIGHT
+        wire3 = Wire(box_condition, Socket.RIGHT,
+                     box_action2, Socket.LEFT
+                     , Mode.FALSE)
+        wire4 = Wire(box_condition, Socket.RIGHT,
+                     box_action2, Socket.TOP
+                     , Mode.NORMAL)
+        wire5 = Wire(box_condition, Socket.RIGHT,
+                     box_action2, Socket.RIGHT
+                     , Mode.TRUE)
+        wire6 = Wire(box_condition, Socket.RIGHT,
+                     box_action2, Socket.BOTTOM
+                     , Mode.ERROR)
+        self.addItem(wire1)
+        self.addItem(wire2)
+        self.addItem(wire3)
+        self.addItem(wire4)
+        self.addItem(wire5)
+        self.addItem(wire6)

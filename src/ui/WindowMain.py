@@ -5,12 +5,7 @@ from PyQt5.QtWidgets import *
 from src.ui.UiUtils import get_child
 from src.widgets.PanedWidget import PanedWidget
 from src.widgets.ToolBar import ToolBar
-from widgets.canvas.Action import Action
-from widgets.canvas.Condition import Condition
-from widgets.canvas.Trigger import Trigger
 from widgets.canvas.core.Canvas import Canvas
-from widgets.canvas.core.Enums import Mode, Socket
-from widgets.canvas.core.Wire import Wire
 
 
 class WindowMain(QMainWindow):
@@ -120,48 +115,8 @@ class WindowMain(QMainWindow):
         content.setCentralWidget(self.canvas())
         scene = self.canvas().scene()
 
-        self.create_sample_flow(scene)
-
         self._do_view_zoom_reset()
         return content
-
-    def create_sample_flow(self, scene):
-        point1 = QPoint(0, 0)
-        point2 = QPoint(0, 160)
-        point3 = QPoint(0, 320)
-        point4 = QPoint(160, 320)
-        box_trigger = Trigger(point1, 'Trigger')
-        box_condition = Condition(point2, 'Condition')
-        box_action1 = Action(point3, 'Action 1')
-        box_action2 = Action(point4, 'Action 2')
-        scene.addItem(box_trigger)
-        scene.addItem(box_condition)
-        scene.addItem(box_action1)
-        scene.addItem(box_action2)
-
-        wire1 = Wire(box_trigger, Socket.BOTTOM,
-                     box_condition, Socket.TOP)
-        wire2 = Wire(box_condition, Socket.BOTTOM,
-                     box_action1, Socket.TOP
-                     , Mode.TRUE)
-        wire3 = Wire(box_condition, Socket.RIGHT,
-                     box_action2, Socket.LEFT
-                     , Mode.FALSE)
-        wire4 = Wire(box_condition, Socket.RIGHT,
-                     box_action2, Socket.TOP
-                     , Mode.NORMAL)
-        wire5 = Wire(box_condition, Socket.RIGHT,
-                     box_action2, Socket.RIGHT
-                     , Mode.TRUE)
-        wire6 = Wire(box_condition, Socket.RIGHT,
-                     box_action2, Socket.BOTTOM
-                     , Mode.ERROR)
-        scene.addItem(wire1)
-        scene.addItem(wire2)
-        scene.addItem(wire3)
-        scene.addItem(wire4)
-        scene.addItem(wire5)
-        scene.addItem(wire6)
 
     def canvas(self):
         return self._canvas
