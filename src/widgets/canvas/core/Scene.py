@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import QLineF, QRect
+from PyQt5.QtCore import QLineF, QPoint, QRect
 from PyQt5.QtGui import QBrush, QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGraphicsScene
 
@@ -12,7 +12,7 @@ class CanvasScene(QGraphicsScene):
         super().__init__()
         self.setSceneRect(-5000, -500, 10000, 10000)  # TODO This should be set outside of Canvas
         # TODO Ideally, the canvas should be 'boundless', adjusted on the fly as needed, with no scroll bars
-        self._prepare_background_grid()
+        self._prepare_background()
 
     def grid_snap_increment(self):
         return self._grid_snap_increment
@@ -26,9 +26,18 @@ class CanvasScene(QGraphicsScene):
     def grid_major(self):
         return self.grid_medium() * 4
 
-    def _prepare_background_grid(self):
+    def _prepare_background(self):
         self._brush_background = QBrush(QColor(0, 24, 0))
+        self._prepare_background_dots()
+        # self._prepare_background_grid()
 
+    def _prepare_background_dots(self):
+        self._pen_grid_dot = QPen()
+        self._pen_grid_dot.setWidth(1)
+        self._pen_grid_dot.setCosmetic(True)
+        self._pen_grid_dot.setColor(QColor(0, 64, 0))
+
+    def _prepare_background_grid(self):
         self._pen_grid_minor = QPen()
         self._pen_grid_minor.setWidth(1)
         self._pen_grid_minor.setCosmetic(True)
@@ -66,7 +75,16 @@ class CanvasScene(QGraphicsScene):
         # Fill the background
         painter.setBrush(self._brush_background)
         painter.drawRect(r)
+        self._draw_background_dots(painter, r)
+        # self._draw_background_grid(painter, r)
 
+    def _draw_background_dots(self, painter: QtGui.QPainter, r: QRect):
+        painter.setPen(self._pen_grid_dot)
+        for x in range(r.left(), r.right(), self.grid_minor()):
+            for y in range(r.top(), r.bottom(), self.grid_minor()):
+                painter.drawPoint(QPoint(x, y))
+
+    def _draw_background_grid(self, painter: QtGui.QPainter, r: QtCore.QRect) -> None:
         # Calculate necessary grid lines and sort them into bins
         lines_minor = []
         lines_medium = []

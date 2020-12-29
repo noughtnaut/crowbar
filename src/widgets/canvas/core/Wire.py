@@ -44,7 +44,7 @@ class Wire(QGraphicsPolygonItem):
 
     def initPainter(self):
         pen = QPen()
-        pen.setWidth(2)
+        pen.setWidth(1)
         pen.setJoinStyle(Qt.RoundJoin)
         pen.setCapStyle(Qt.RoundCap)
         pen.setCosmetic(True)
