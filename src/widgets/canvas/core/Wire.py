@@ -10,9 +10,6 @@ from widgets.canvas.core.Enums import Mode, Socket
 
 
 class Wire(QGraphicsPolygonItem):
-    # FIXME Wires must belong to the component they originate at, so that the component knows its exit paths.
-    # FIXME Source components must also request wires to re-route when the component moves.
-    # FIXME Destination components must also (be able to!) request wires to re-route when the component moves.
     _mode: Mode
     _title: str
     _from_component: Component
@@ -43,6 +40,7 @@ class Wire(QGraphicsPolygonItem):
         self._from_component.addOutputWire(self)
         self._to_component.addInputWire(self)
         self.autoRoute()
+        # Don't set cursor here; it would apply to entire bounding rect
 
     def initPainter(self):
         pen = QPen()
