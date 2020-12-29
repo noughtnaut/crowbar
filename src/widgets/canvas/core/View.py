@@ -1,6 +1,6 @@
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCursor, QMouseEvent, QWheelEvent
+from PyQt5.QtGui import QMouseEvent, QWheelEvent
 from PyQt5.QtWidgets import QFrame, QGraphicsView, QWidget
 
 from ui.UiUtils import click_descriptor, with_control_key
@@ -17,10 +17,8 @@ class CanvasView(QGraphicsView):
         super().__init__(scene, parent)
         self.setFrameStyle(QFrame.Panel)
         self.setMouseTracking(True)
-        self._cursor_normal = QCursor(Qt.ArrowCursor)
-        self._cursor_crosshair = QCursor(Qt.CrossCursor)
-        self._cursor_closed_hand = QCursor(Qt.ClosedHandCursor)
-        self.setCursor(self._cursor_normal)
+        self._pan_from = None
+        self._pan_to = None
 
     def dragMoveEvent(self, event: QtGui.QDragMoveEvent) -> None:
         print(click_descriptor(event, 'drag¤'))
@@ -29,18 +27,34 @@ class CanvasView(QGraphicsView):
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         # print(click_descriptor(event, 'move'))
         super().mouseMoveEvent(event)
+        # Panning canvas while click-and-dragging the background
+        if self._pan_from is not None:
+            if self._pan_to is not None:
+                self._pan_to = self.mapToScene(event.pos())
+                delta = self._pan_to - self._pan_from
+                self.setTransformationAnchor(QGraphicsView.NoAnchor)
+                self.translate(delta.x(), delta.y())
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        print(click_descriptor(event, 'click'))
+        # print(click_descriptor(event, 'click'))
         super().mousePressEvent(event)
+        # Start panning canvas if click-and-dragging the background
+        if click_descriptor(event) == "left-" and self.itemAt(event.pos()) is None:
+            self.setCursor(Qt.ClosedHandCursor)
+            self._pan_from = self.mapToScene(event.pos())
+            self._pan_to = None
 
     def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
+        # print(click_descriptor(event, 'double-click'))
         super().mouseDoubleClickEvent(event)
-        print(click_descriptor(event, 'double-click'))
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        print(click_descriptor(event, 'release'))
+        # print(click_descriptor(event, 'release'))
         super().mouseReleaseEvent(event)
+        # Stop panning canvas if no longer dragging the background
+        if click_descriptor(event) == "left-" and self._pan_from is not None:
+            self.unsetCursor()
+            self._pan_from = None
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         # print(click_descriptor(event, 'scroll'))
@@ -66,7 +80,6 @@ class CanvasView(QGraphicsView):
         if self._zoom_min < new_zoom < self._zoom_max:
             self.scale(factor, factor)
             self._zoom = self.transform().m11()  # m11 and m22 are the applied x and y scaling factors
-        # TODO Keep the point at the cursor position in place while zooming (when possible)
 
     def zoom_reset(self):
         # Note: This works, but does nothing to bring the contents into view

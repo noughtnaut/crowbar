@@ -34,7 +34,11 @@ def with_shift_key(event: _any_mouse_event) -> bool:
     return event.modifiers() & Qt.ShiftModifier
 
 
-def click_descriptor(event: _any_mouse_event, suffix: str):
+def click_descriptor(event: _any_mouse_event, suffix: str = ""):
+    """ This enables writing if-statements intuitively, hiding all the possible scenarios and combinations,
+        returning only what is true. For instance, you can write `click_descriptor(e, 'click') == 'shift-left-click`
+        without worrying if, for instance, ctrl was also pressed.
+    """
     action = ""
     if with_control_key(event):
         action += "ctrl-"
@@ -67,6 +71,7 @@ def click_descriptor(event: _any_mouse_event, suffix: str):
         elif event.button() > 0:
             action += "unknown-"
             print("Unknown button:", event.button())
-    action += suffix + "  -  (" + str(event.pos().x()) + ", " + str(event.pos().y()) + ")"
+    action += suffix
+    # action += " at (" + str(event.pos().x()) + ", " + str(event.pos().y()) + ")"
     return action
 

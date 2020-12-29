@@ -12,8 +12,6 @@ class CanvasScene(QGraphicsScene):
         super().__init__()
         self.setSceneRect(-5000, -500, 10000, 10000)  # TODO This should be set outside of Canvas
         # TODO Ideally, the canvas should be 'boundless', adjusted on the fly as needed, with no scroll bars
-        # TODO Set cursor on hover: hand when over canvas to hint panning the view
-        # Qt.OpenHandCursor
         self._prepare_background_grid()
 
     def grid_snap_increment(self):

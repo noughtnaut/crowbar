@@ -189,7 +189,6 @@ class WindowMain(QMainWindow):
     def _do_view_zoom_to_fit(self):
         self.canvas().view().zoom_to_fit()
         self.canvas().view().zoom_out()
-        print("Zoing, now it fits.")
 
     def _do_quit(self):
         self.close()

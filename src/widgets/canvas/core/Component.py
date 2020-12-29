@@ -34,6 +34,7 @@ class Component(QGraphicsRectItem):
         self.initPainter()
         self._wiring_in = []
         self._wiring_out = []
+        self.setCursor(Qt.OpenHandCursor)
 
     def initPainter(self):
         pen_component_edge = QPen()
