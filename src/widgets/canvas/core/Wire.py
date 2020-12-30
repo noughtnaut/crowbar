@@ -139,9 +139,66 @@ class Wire(QGraphicsPolygonItem):
 
         # Last point
         new_path.append(self._to_component.socketPoint(self._to_socket))
-        # TODO Add an arrow head
+        self._add_path_arrow_head(new_path)
         # TODO Write label near source socket
         self.setPolygon(new_path)
+
+    def _add_path_arrow_head(self, wire_path: QPolygonF):
+        """ This assumes that the last point of `wire_path` ends and the destination socket perpendicular to the
+            component edge.
+        """
+        if self._to_socket == Socket.TOP:
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x() - 5,
+                self._to_component.socketPoint(self._to_socket).y() - 7
+            ))
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x() + 5,
+                self._to_component.socketPoint(self._to_socket).y() - 7
+            ))
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x(),
+                self._to_component.socketPoint(self._to_socket).y()
+            ))
+        elif self._to_socket == Socket.RIGHT:
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x() + 7,
+                self._to_component.socketPoint(self._to_socket).y() - 5
+            ))
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x() + 7,
+                self._to_component.socketPoint(self._to_socket).y() + 5
+            ))
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x(),
+                self._to_component.socketPoint(self._to_socket).y()
+            ))
+        elif self._to_socket == Socket.BOTTOM:
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x() + 5,
+                self._to_component.socketPoint(self._to_socket).y() + 7
+            ))
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x() - 5,
+                self._to_component.socketPoint(self._to_socket).y() + 7
+            ))
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x(),
+                self._to_component.socketPoint(self._to_socket).y()
+            ))
+        elif self._to_socket == Socket.LEFT:
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x() - 7,
+                self._to_component.socketPoint(self._to_socket).y() - 5
+            ))
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x() - 7,
+                self._to_component.socketPoint(self._to_socket).y() + 5
+            ))
+            wire_path.append(QPointF(
+                self._to_component.socketPoint(self._to_socket).x(),
+                self._to_component.socketPoint(self._to_socket).y()
+            ))
 
     def mode(self):
         return self._mode
