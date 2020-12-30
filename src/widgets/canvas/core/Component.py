@@ -6,14 +6,22 @@ from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QPainter, QPen, QStaticText
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsRectItem, QStyleOptionGraphicsItem, QWidget
 
-from widgets.canvas.core.Enums import Socket
 from widgets.canvas.core import Wire
+from widgets.canvas.core.Enums import Socket
 
 _DEFAULT_SIZE_W = 80
 _DEFAULT_SIZE_H = 80
 
 
 class Component(QGraphicsRectItem):
+    """ In a task (flow) that requires several steps to complete, each step is a Component.
+        Components come in three main types:
+        - Triggers, which monitor the universe, waiting for certain events to happen;
+        - Operations, which perform one of any number of pre-defined actions or user scripts;
+        - Conditions, which can contain scripting and result in a True/False decision.
+
+        A series of Components, bound together using Wires, are executed in sequence.
+    """
     _title: str
     _wiring_in: []
     _wiring_out: []

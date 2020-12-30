@@ -3,8 +3,8 @@ from PyQt5.QtCore import QLineF, QPoint, QRect
 from PyQt5.QtGui import QBrush, QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGraphicsScene
 
-from widgets.canvas.Action import Action
 from widgets.canvas.Condition import Condition
+from widgets.canvas.Operation import Operation
 from widgets.canvas.Trigger import Trigger
 from widgets.canvas.core.Enums import Mode, Socket
 from widgets.canvas.core.Wire import Wire
@@ -137,8 +137,8 @@ class CanvasScene(QGraphicsScene):
         point4 = QPoint(160, 320)
         box_trigger = Trigger(point1, 'Trigger')
         box_condition = Condition(point2, 'Condition')
-        box_action1 = Action(point3, 'Action 1')
-        box_action2 = Action(point4, 'Action 2')
+        box_action1 = Operation(point3, 'Action 1')
+        box_action2 = Operation(point4, 'Action 2')
         self.addItem(box_trigger)
         self.addItem(box_condition)
         self.addItem(box_action1)

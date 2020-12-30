@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QToolBar, QSizePolicy
+from PyQt5.QtWidgets import QSizePolicy, QToolBar, QWidget
 
 
 class ToolBar(QToolBar):

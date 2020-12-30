@@ -10,6 +10,17 @@ from widgets.canvas.core.Enums import Mode, Socket
 
 
 class Wire(QGraphicsPolygonItem):
+    """ In a task (flow) that requires several steps to complete, Wires are used to determine the order of execution.
+        Wires come in a few flavours called Modes:
+        - Normal, which simply carry the process from the end of one Component to the beginning of another;
+        - True/False, which originate from Condition components in accordance with the outcome of the condition;
+        - Error, which continue the process in the event that a Condition generated an internal error.
+
+        Note that Components may have any number of Wires coming out of them. The presence of multiple Wires will
+        serve to fork the flow into several processes, executing subsequent Components in parallel, whereas a
+        Component with no exit paths will end one process. Such continues the flow of execution until no more processes
+        are running.
+    """
     _mode: Mode
     _title: str
     _from_component: Component

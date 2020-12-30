@@ -5,6 +5,12 @@ from widgets.canvas.core.Component import Component
 
 
 class Condition(Component):
+    """ In a task (flow) that requires several steps to complete, each step is a Component.
+        A Condition contains some user-defined script snippet that will result in a True/False decision. If the
+        decision is True, the Condition will create a flow process for only those Wires connected to it that are of
+        mode True. Similarly, if the decision is False, the Condition will create a flow process for only those Wires
+        connected to it that are of mode False.
+    """
     _polygon: QPolygonF
     _shape: QPainterPath
 

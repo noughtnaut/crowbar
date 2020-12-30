@@ -10,6 +10,7 @@ class Socket(enum.Enum):
     RIGHT = 2
     BOTTOM = 3
     LEFT = 4
+
     # TODO The above represents socket "facing"; for RAS we will need several sockets on the same face,
     # TODO and also socket type, order (incl. grouping/spacers), name, etc.
 
@@ -29,9 +30,7 @@ class Mode(enum.Enum):
         - FALSE: Applicable to Conditions, yields the exit path if the condition was FALSE.
         - ERROR: In case the Component operation caused an error, *only* paths of this mode will be followed.
         Note:
-        - IF not specified, NORMAL is assumed.
-        - Components may have any number of exit paths of any types. Duplicate mode paths will fork the flow process,
-          while a Component with no exit paths will end the flow process.
+        - If not specified, NORMAL is assumed.
     """
     NORMAL = 0
     TRUE = 1
