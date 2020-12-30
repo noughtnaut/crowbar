@@ -15,6 +15,8 @@ For instance:
 
 These are some of the things you will be able to do from the familiar comfort of a normal desktop application.
 
+![](media/crowbar/screenshot.png)
+
 ### Motivation
 
 I'm using somewhat of a [hack](https://github.com/Noughtnaut/noughty-autorandr) to automatically change my default printer according to the current network connection. It works, but for the wrong reasons. I'd like to make a decent solution for this _and similar_ needs, and I've been meaning to get into open source desktop app development, so I took this as my cue. If I could make something like [Automagic](http://automagic4android.com/), that would be neat.
