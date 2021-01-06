@@ -5,7 +5,7 @@ from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtGui import QColor, QPainter, QPen, QPolygonF
 from PyQt5.QtWidgets import QGraphicsPolygonItem, QStyleOptionGraphicsItem, QWidget
 
-from widgets.canvas.core import Component
+from widgets.canvas.core import Component, Scene
 from widgets.canvas.core.Enums import Mode, Socket
 
 
@@ -27,6 +27,7 @@ class Wire(QGraphicsPolygonItem):
     _from_socket: Socket
     _to_component: Component
     _to_socket: Socket
+    _min_len: int
 
     _color = {
         Mode.NORMAL: QColor(192, 192, 192),  # white
@@ -36,6 +37,7 @@ class Wire(QGraphicsPolygonItem):
     }
 
     def __init__(self,
+                 scene: Scene,
                  from_component: Component, from_socket: Socket,
                  to_component: Component, to_socket: Socket,
                  mode: Mode = Mode.NORMAL,
@@ -50,6 +52,7 @@ class Wire(QGraphicsPolygonItem):
         self._to_socket = to_socket
         self._from_component.addOutputWire(self)
         self._to_component.addInputWire(self)
+        self._min_len = scene.grid_snap_increment()
         self.autoRoute()
         # Don't set cursor here; it would apply to entire bounding rect
 
@@ -70,93 +73,121 @@ class Wire(QGraphicsPolygonItem):
     def autoRoute(self):
         # Routing rules:
         # - If the wire can be straight, let it be straight.
-        #   This requires the sockets to be opposing and aligned.
+        #   - This requires the sockets to be opposing and aligned.
         # - If the sockets are not aligned with the ideal routing, go straight out for 20px before turning.
-        #   This gives the wire some distance from the component, and also provides a space for the arrow head.
+        #   - This gives the wire some distance from the component, and also provides a space for the arrow head.
         # - If the wire must wrap around a component to reach its socket, also keep 20px of distance.
         # - If we need to make a Z-bend, let the zig intersect the zag down the middle.
-        #   This is mainly for pleasing symmetry. We should be able to manually adjust routes later on.
-        new_path = QPolygonF()
+        #   - Ditto for the middle part of S-bends.
+        #   - This is mainly for pleasing symmetry. We should be able to manually adjust routes later on.
+
+        route = QPolygonF()
+
+        p_from = self._from_component.socketPoint(self._from_socket)
+        p_to = self._to_component.socketPoint(self._to_socket)
+
+        delta_x = p_to.x() - p_from.x()
+        delta_y = p_to.y() - p_from.y()
+
         # First point
-        new_path.append(self._from_component.socketPoint(self._from_socket))
+        route.append(p_from)
 
-        delta_x = self._to_component.pos().x() - self._from_component.pos().x()
-        delta_y = self._to_component.pos().y() - self._from_component.pos().y()
-
-        # TODO It must be possible to normalize/optimize this to cut down on the number of branches
-        # Idea: Introduce a point 20px out from each socket, no matter where we're going?
-        #       - This would free us from having to consider the "facing" of sockets!
-        #       - This might result in artifacts when manually adjusting routes later on, but that's acceptable.
-        # Idea: Implement routing between arbitrary points as an incremental path builder?
-        if delta_x > 0:  # Going right
-            if delta_y > 0:  # Going down
-                if self._from_socket == Socket.TOP:
-                    pass  # TODO This is just a stupid amount of code I really don't wanna write
-                elif self._from_socket == Socket.RIGHT:
-                    if self._to_socket == Socket.TOP:
-                        new_path.append(QPointF(
-                            self._to_component.socketPoint(self._to_socket).x(),
-                            self._from_component.socketPoint(self._from_socket).y()
+        if self._to_socket.oppositeOf(self._from_socket):  # Some variant of I- or Z-shape
+            if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
+                # If there isn't enough room to make a simple cross-line, we need to make a detour
+                if delta_x != 0:
+                    if abs(delta_y) >= 2 * self._min_len:
+                        # Make a simple cross-line
+                        offset_y = delta_y / 2
+                        route.append(QPointF(
+                            p_from.x(),
+                            p_from.y() + offset_y
                         ))
-                    elif self._to_socket == Socket.RIGHT:
-                        new_path.append(QPointF(
-                            self._to_component.socketPoint(self._to_socket).x() + 20,
-                            self._from_component.socketPoint(self._from_socket).y()
+                        route.append(QPointF(
+                            p_to.x(),
+                            p_from.y() + offset_y
                         ))
-                        new_path.append(QPointF(
-                            self._to_component.socketPoint(self._to_socket).x() + 20,
-                            self._to_component.socketPoint(self._to_socket).y()
+                    else:  # Make an S-shaped detour
+                        # First, an offset point
+                        offset_y = self._min_len if self._from_socket == Socket.BOTTOM else -self._min_len
+                        route.append(QPointF(
+                            p_from.x(),
+                            p_from.y() + offset_y
                         ))
-                    elif self._to_socket == Socket.BOTTOM:
-                        new_path.append(QPointF(
-                            self._from_component.socketPoint(self._from_socket).x()
-                            + (delta_x - self._to_component.width()) / 2,
-                            self._from_component.socketPoint(self._from_socket).y()
+                        # Then, a Z-shaped route between the offset points
+                        offset_x = delta_x / 2
+                        offset_y = self._min_len if self._from_socket == Socket.BOTTOM else -self._min_len
+                        route.append(QPointF(
+                            p_from.x() + offset_x,
+                            p_from.y() + offset_y
                         ))
-                        new_path.append(QPointF(
-                            self._from_component.socketPoint(self._from_socket).x()
-                            + (delta_x - self._to_component.width()) / 2,
-                            self._to_component.socketPoint(self._to_socket).y() + 20
+                        offset_x = delta_x / 2
+                        offset_y = self._min_len if self._to_socket == Socket.BOTTOM else -self._min_len
+                        route.append(QPointF(
+                            p_to.x() - offset_x,
+                            p_to.y() + offset_y
                         ))
-                        new_path.append(QPointF(
-                            self._to_component.socketPoint(self._to_socket).x(),
-                            self._to_component.socketPoint(self._to_socket).y() + 20
+                        # # Finally, another offset point
+                        offset_y = self._min_len if self._to_socket == Socket.BOTTOM else -self._min_len
+                        route.append(QPointF(
+                            p_to.x(),
+                            p_to.y() + offset_y
                         ))
-                    elif self._to_socket == Socket.LEFT:
-                        new_path.append(QPointF(
-                            self._from_component.socketPoint(self._from_socket).x()
-                            + (delta_x - self._to_component.width()) / 2,
-                            self._from_component.socketPoint(self._from_socket).y()
+                # else: Straight vertical, no intermediate points needed
+            else:  # self._from_socket == Socket.LEFT or self._from_socket == Socket.RIGHT
+                # If there isn't enough room to make a simple cross-line, we need to make a detour
+                if delta_y != 0:
+                    if abs(delta_x) >= 2 * self._min_len:
+                        # Make a simple cross-line
+                        offset_x = delta_x / 2
+                        route.append(QPointF(
+                            p_from.x() + offset_x,
+                            p_from.y()
                         ))
-                        new_path.append(QPointF(
-                            self._from_component.socketPoint(self._from_socket).x()
-                            + (delta_x - self._to_component.width()) / 2,
-                            self._to_component.socketPoint(self._to_socket).y()
+                        route.append(QPointF(
+                            p_from.x() + offset_x,
+                            p_to.y()
                         ))
-                elif self._from_socket == Socket.BOTTOM:
-                    pass  # TODO
-                elif self._from_socket == Socket.LEFT:
-                    pass  # TODO
-            elif delta_y < 0:  # Going up
-                pass  # TODO
-            # else: Going horizontally
-        elif delta_x < 0:  # Going left
-            if delta_y > 0:  # Going down
-                pass  # TODO
-            elif delta_y < 0:  # Going up
-                pass  # TODO
-            # else: Going horizontally
-        # else: Going nowhere!
+                    else:  # Make an S-shaped detour
+                        # First, an offset point
+                        offset_x = self._min_len if self._from_socket == Socket.RIGHT else -self._min_len
+                        route.append(QPointF(
+                            p_from.x() + offset_x,
+                            p_from.y()
+                        ))
+                        # Then, a Z-shaped route between the offset points
+                        offset_x = self._min_len if self._from_socket == Socket.RIGHT else -self._min_len
+                        offset_y = delta_y / 2
+                        route.append(QPointF(
+                            p_from.x() + offset_x,
+                            p_from.y() + offset_y
+                        ))
+                        offset_x = self._min_len if self._to_socket == Socket.RIGHT else -self._min_len
+                        offset_y = delta_y / 2
+                        route.append(QPointF(
+                            p_to.x() + offset_x,
+                            p_to.y() - offset_y
+                        ))
+                        # # Finally, another offset point
+                        offset_x = self._min_len if self._to_socket == Socket.RIGHT else -self._min_len
+                        route.append(QPointF(
+                            p_to.x() + offset_x,
+                            p_to.y()
+                        ))
+                # else: Straight horizontal, no intermediate points needed
+        elif self._to_socket == self._from_socket:  # Some variant of C-shape
+            pass
+        else:  # Some variant of L-shape
+            pass
 
         # Last point
-        new_path.append(self._to_component.socketPoint(self._to_socket))
-        self._add_path_arrow_head(new_path)
-        # TODO Write label near source socket
-        self.setPolygon(new_path)
+        route.append(p_to)
+        self._add_path_arrow_head(route)
+        self.setPolygon(route)
 
     def _add_path_arrow_head(self, wire_path: QPolygonF):
-        """ This assumes that the last point of `wire_path` ends and the destination socket perpendicular to the
-            component edge.
+        """ This assumes that the last point of `wire_path` ends at the destination socket,
+            and that the destination socket is perpendicular to the component edge.
         """
         if self._to_socket == Socket.TOP:
             wire_path.append(QPointF(
@@ -233,3 +264,4 @@ class Wire(QGraphicsPolygonItem):
         painter.setPen(self.pen())
         painter.drawPolyline(self.polygon())
         # FIXME Paint wires *behind* components
+        # TODO Write label near source socket

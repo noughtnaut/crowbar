@@ -1,5 +1,6 @@
 TODO
 - Add logging for debugging etc.
+- Decide and adhere to public|private variable|method NAMING: snake_case or camelCase?
 - Create a dummy folder/flow data structure, and play with the left pane
 - Make resources work like they do in Designer
 - Component titles should be centered (needs using text instead of static text?)
