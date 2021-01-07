@@ -188,13 +188,13 @@ class CanvasScene(QGraphicsScene):
                      box_action2, Socket.TOP,
                      Mode.TRUE)
         wire2 = Wire(self, box_action1, Socket.BOTTOM,
-                     box_action3, Socket.TOP,
+                     box_action3, Socket.LEFT,
                      Mode.FALSE)
         wire3 = Wire(self, box_action1, Socket.TOP,
                      box_action4, Socket.BOTTOM,
                      Mode.ERROR)
         wire4 = Wire(self, box_action1, Socket.TOP,
-                     box_action5, Socket.BOTTOM,
+                     box_action5, Socket.LEFT,
                      Mode.NORMAL)
         self.addItem(wire1)
         self.addItem(wire2)

@@ -178,7 +178,18 @@ class Wire(QGraphicsPolygonItem):
         elif self._to_socket == self._from_socket:  # Some variant of C-shape
             pass
         else:  # Some variant of L-shape
-            pass
+            # All we need here is to find one corner point. Which way we're going can be determined by simply looking
+            # at the orientation of one of the sockets.
+            if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
+                p_x = p_from.x()
+                p_y = p_to.y()
+            else:
+                p_x = p_to.x()
+                p_y = p_from.y()
+            route.append(QPointF(
+                p_x,
+                p_y
+            ))
 
         # Last point
         route.append(p_to)
@@ -263,5 +274,16 @@ class Wire(QGraphicsPolygonItem):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(self.pen())
         painter.drawPolyline(self.polygon())
+        self.paint_poly_points(painter)
         # FIXME Paint wires *behind* components
         # TODO Write label near source socket
+
+    def paint_poly_points(self, painter):
+        dot_pen = QPen()
+        dot_pen.setWidth(4)
+        dot_pen.setCosmetic(True)
+        dot_pen.setColor(QColor(255, 0, 255))
+        painter.setPen(dot_pen)
+        for i in range(0, self.polygon().size()):
+            p = self.polygon().value(i)
+            painter.drawPoint(p)
