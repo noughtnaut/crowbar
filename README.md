@@ -19,7 +19,7 @@ These are some of the things you will be able to do from the familiar comfort of
 
 ### Motivation
 
-I'm using somewhat of a [hack](https://github.com/Noughtnaut/noughty-autorandr) to automatically change my default printer according to the current network connection. It works, but for the wrong reasons. I'd like to make a decent solution for this _and similar_ needs, and I've been meaning to get into open source desktop app development, so I took this as my cue. If I could make something like [Automagic](http://automagic4android.com/), that would be neat.
+I'm using somewhat of a [hack](https://github.com/noughtnaut/noughty-autorandr) to automatically change my default printer according to the current network connection. It works, but for the wrong reasons. I'd like to make a decent solution for this _and similar_ needs, and I've been meaning to get into open source desktop app development, so I took this as my cue. If I could make something like [Automagic](http://automagic4android.com/), that would be neat.
 
 Further, there once was a desktop app called [Cuttlefish](https://launchpad.net/cuttlefish) which could do sort of what I was after, albeit not as elaborate as Automagic. The fact that it has seen no upkeep since 2012 but the last bug report is from 2017 indicates that people do go out of their way to achieve some level of automation.
 

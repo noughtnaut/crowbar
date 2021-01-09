@@ -33,10 +33,19 @@ class WindowAbout(QDialog):
         version.setAlignment(Qt.AlignCenter)
         layout.addWidget(version)
 
-        github = QLabel('For more info, updates, and source code, visit:\nhttps://github.com/Noughtnaut/crowbar')
+        github = QLabel('For more info, updates, and source code, visit:')
+        github.setOpenExternalLinks(True)
+        github.setTextInteractionFlags(Qt.LinksAccessibleByMouse)
         github.setWordWrap(True)
         github.setAlignment(Qt.AlignCenter)
         layout.addWidget(github)
+
+        github_link = QLabel('<a href="https://github.com/Noughtnaut/crowbar">github.com/noughtnaut/crowbar</a>')
+        github_link.setOpenExternalLinks(True)
+        github_link.setTextInteractionFlags(Qt.LinksAccessibleByMouse)
+        github_link.setWordWrap(True)
+        github_link.setAlignment(Qt.AlignCenter)
+        layout.addWidget(github_link)
 
         button_box = QDialogButtonBox(QDialogButtonBox.Ok)
         button_box.accepted.connect(self.accept)
