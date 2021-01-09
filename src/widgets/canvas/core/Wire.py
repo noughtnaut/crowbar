@@ -83,6 +83,8 @@ class Wire(QGraphicsPolygonItem):
 
         route = QPolygonF()
 
+        # print(self._from_component.title(), "-", self._to_component.title())
+
         p_from = self._from_component.socketPoint(self._from_socket)
         p_to = self._to_component.socketPoint(self._to_socket)
 
@@ -92,47 +94,62 @@ class Wire(QGraphicsPolygonItem):
         # First point
         route.append(p_from)
 
+        # Intermediate points
         if self._to_socket.oppositeOf(self._from_socket):  # Some variant of I-, S- or Z-shape
             if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
-                if delta_x == 0:
-                    # Straight vertical, no intermediate points needed
-                    # We test for this early on because it'll be a common occurrence.
-                    pass
-                else:
-                    if abs(delta_y) >= 2 * self._min_len:
-                        # There's enough room between the components to make a simple cross-line
-                        if (self._from_socket == Socket.TOP and delta_y > 0) \
-                                or (self._from_socket == Socket.BOTTOM and delta_y < 0):
-                            print("¤¤¤¤ IC")
-                            # self.route_C_path(route, p_from, p_to, delta_x, delta_y)
+                if (delta_y >= 2 * self._min_len and self._from_socket == Socket.BOTTOM) \
+                        or (delta_y < 2 * self._min_len and self._from_socket == Socket.TOP):
+                    # There's enough room between the components to make a simple cross-line
+                    if (self._from_socket == Socket.TOP and delta_y > 0) \
+                            or (self._from_socket == Socket.BOTTOM and delta_y < 0):
+                        print("¤¤¤¤ IC")  # TODO Build a test flow for this
+                        # self.route_C_path(route, p_from, p_to, delta_x, delta_y)
+                    else:
+                        if delta_x == 0:
+                            # Straight vertical, no intermediate points needed
+                            # We test for this early on because it'll be a common occurrence.
+                            print("Straight vertical")
+                            pass
                         else:
                             print("N")
                             self.route_Z_path(route, p_from, p_to, delta_x, delta_y)
+                else:
+                    if delta_x == 0:
+                        print("C (vertically aligned)")  # TODO Build a test flow for this
+                        self.route_C_path(route, p_from, p_to, delta_x, delta_y)
                     else:
                         # There isn't enough room to make a simple cross-line, we need to make a detour
+                        # TODO Detect when the detour can't keep minimum distance, do a C-shape instead
                         print("~")
-                        self.route_S_horizontal_path(route, p_from, p_to, delta_x, delta_y)
+                        self.route_S_path(route, p_from, p_to, delta_x, delta_y)
             else:  # from Socket.LEFT or from Socket.RIGHT
-                if delta_y == 0:
-                    # Straight horizontal, no intermediate points needed
-                    # We test for this early on because it'll be a common occurrence.
-                    pass
-                else:
-                    if abs(delta_x) >= 2 * self._min_len:
-                        # There's enough room between the components to make a simple cross-line
-                        if (self._from_socket == Socket.LEFT and delta_x > 0) \
-                                or (self._from_socket == Socket.RIGHT and delta_x < 0):
-                            print("¤¤¤¤ -C")
-                            # self.route_C_path(route, p_from, p_to, delta_x, delta_y)
+                if (delta_x >= 2 * self._min_len and self._from_socket == Socket.RIGHT) \
+                        or (delta_x < 2 * self._min_len and self._from_socket == Socket.LEFT):
+                    # There's enough room between the components to make a simple cross-line
+                    if (self._from_socket == Socket.LEFT and delta_x > 0) \
+                            or (self._from_socket == Socket.RIGHT and delta_x < 0):
+                        print("¤¤¤¤ -C")  # TODO Build a test flow for this
+                        # self.route_C_path(route, p_from, p_to, delta_x, delta_y)
+                    else:
+                        if delta_y == 0:
+                            # Straight horizontal, no intermediate points needed
+                            # We test for this early on because it'll be a common occurrence.
+                            print("Straight horizontal")
+                            pass
                         else:
                             print("Z")
                             self.route_Z_path(route, p_from, p_to, delta_x, delta_y)
+                else:
+                    if delta_y == 0:
+                        print("C (horizontally aligned)")  # TODO Build a test flow for this
+                        self.route_C_path(route, p_from, p_to, delta_x, delta_y)
                     else:
                         # There isn't enough room to make a simple cross-line, we need to make a detour
+                        # TODO Detect when the detour can't keep minimum distance, do a C-shape instead
                         print("S")
-                        self.route_S_vertical_path(route, p_from, p_to, delta_x, delta_y)
-        elif self._to_socket == self._from_socket:  # Some variant of C-shape
-            print("< C >")
+                        self.route_S_path(route, p_from, p_to, delta_x, delta_y)
+        elif self._to_socket == self._from_socket:  # Some variant of C- or J-shape
+            print("C")
             self.route_C_path(route, p_from, p_to, delta_x, delta_y)
         else:  # Some variant of L-shape
             print("L")
@@ -167,62 +184,52 @@ class Wire(QGraphicsPolygonItem):
                 p_to.y()
             ))
 
-    def route_S_vertical_path(self, route, p_from, p_to, delta_x, delta_y):
+    def route_S_path(self, route, p_from, p_to, delta_x, delta_y):
         # Components aren't horizontally aligned, and there's no room in between them for a horizontal cross-line.
         # So we need to put in an additional vertical segment to curve back.
+        if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
+            offset_from_x = 0
+            offset_from_y = self._min_len if self._from_socket == Socket.BOTTOM else -self._min_len
+            offset_to_x = 0
+            offset_to_y = self._min_len if self._to_socket == Socket.BOTTOM else -self._min_len
+        else:
+            offset_from_x = self._min_len if self._from_socket == Socket.RIGHT else -self._min_len
+            offset_from_y = 0
+            offset_to_x = self._min_len if self._to_socket == Socket.RIGHT else -self._min_len
+            offset_to_y = 0
+        offset_from_x2 = (p_to.x() - p_from.x()) / 2
+        offset_from_y2 = (p_to.y() - p_from.y()) / 2
         # First, an offset point
-        offset_x = self._min_len if self._from_socket == Socket.RIGHT else -self._min_len
         route.append(QPointF(
-            p_from.x() + offset_x,
-            p_from.y()
+            p_from.x() + offset_from_x,
+            p_from.y() + offset_from_y
         ))
-        # Then, a Z-shaped route between the offset points
-        offset_x = self._min_len if self._from_socket == Socket.RIGHT else -self._min_len
-        offset_y = delta_y / 2
-        route.append(QPointF(
-            p_from.x() + offset_x,
-            p_from.y() + offset_y
-        ))
-        offset_x = self._min_len if self._to_socket == Socket.RIGHT else -self._min_len
-        offset_y = delta_y / 2
-        route.append(QPointF(
-            p_to.x() + offset_x,
-            p_to.y() - offset_y
-        ))
+        if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
+            pass
+            # Then, a Z-shaped route between the offset points
+            route.append(QPointF(
+                p_from.x() + offset_from_x2,
+                p_from.y() + offset_from_y
+            ))
+            route.append(QPointF(
+                p_from.x() + offset_from_x2,
+                p_to.y() + offset_to_y
+            ))
+        else:
+            pass
+            # Then, a Z-shaped route between the offset points
+            route.append(QPointF(
+                p_from.x() + offset_from_x,
+                p_from.y() + offset_from_y2
+            ))
+            route.append(QPointF(
+                p_to.x() + offset_to_x,
+                p_from.y() + offset_from_y2
+            ))
         # Finally, another offset point
-        offset_x = self._min_len if self._to_socket == Socket.RIGHT else -self._min_len
         route.append(QPointF(
-            p_to.x() + offset_x,
-            p_to.y()
-        ))
-
-    def route_S_horizontal_path(self, route, p_from, p_to, delta_x, delta_y):
-        # Components aren't vertically aligned, and there's no room in between them for a vertical cross-line.
-        # So we need to put in an additional horizontal segment to curve back.
-        # First, an offset point
-        offset_y = self._min_len if self._from_socket == Socket.BOTTOM else -self._min_len
-        route.append(QPointF(
-            p_from.x(),
-            p_from.y() + offset_y
-        ))
-        # Then, a Z-shaped route between the offset points
-        offset_x = delta_x / 2
-        offset_y = self._min_len if self._from_socket == Socket.BOTTOM else -self._min_len
-        route.append(QPointF(
-            p_from.x() + offset_x,
-            p_from.y() + offset_y
-        ))
-        offset_x = delta_x / 2
-        offset_y = self._min_len if self._to_socket == Socket.BOTTOM else -self._min_len
-        route.append(QPointF(
-            p_to.x() - offset_x,
-            p_to.y() + offset_y
-        ))
-        # Finally, another offset point
-        offset_y = self._min_len if self._to_socket == Socket.BOTTOM else -self._min_len
-        route.append(QPointF(
-            p_to.x(),
-            p_to.y() + offset_y
+            p_to.x() + offset_to_x,
+            p_to.y() + offset_to_y
         ))
 
     def route_C_path(self, route, p_from, p_to, delta_x, delta_y):
@@ -331,6 +338,6 @@ class Wire(QGraphicsPolygonItem):
         dot_pen.setCosmetic(True)
         dot_pen.setColor(QColor(255, 0, 255))
         painter.setPen(dot_pen)
-        for i in range(0, self.polygon().size()):
+        for i in range(0, self.polygon().size() - 3):  # Don't paint dots on the arrow head
             p = self.polygon().value(i)
             painter.drawPoint(p)

@@ -3,7 +3,9 @@ from PyQt5.QtCore import QLineF, QPoint, QRect
 from PyQt5.QtGui import QBrush, QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGraphicsScene
 
+from widgets.canvas.Condition import Condition
 from widgets.canvas.Operation import Operation
+from widgets.canvas.Trigger import Trigger
 from widgets.canvas.core.Enums import Mode, Socket
 from widgets.canvas.core.Wire import Wire
 
@@ -17,7 +19,8 @@ class CanvasScene(QGraphicsScene):
         self.setSceneRect(-5000, -500, 10000, 10000)  # TODO This should be set outside of Canvas
         # TODO Ideally, the canvas should be 'boundless', adjusted on the fly as needed, with no scroll bars
         self._prepare_background()
-        self.create_sample_flow()
+        # self.create_sample_flow()
+        self.create_test_flows()
 
     def grid_snap_increment(self):
         return self._grid_snap_increment
@@ -129,63 +132,63 @@ class CanvasScene(QGraphicsScene):
 
     def create_sample_flow(self):
         # TODO Find a better place for the Trigger, which should be a fixture rather than part of a 'sample'.
-        # point1 = QPoint(0, 0)
-        # point2 = QPoint(0, 160)
-        # point3 = QPoint(0, 320)
-        # point4 = QPoint(160, 320)
-        # box_trigger = Trigger(point1, 'Trigger')
-        # box_condition = Condition(point2, 'Condition')
-        # box_action1 = Operation(point3, 'Action 1')
-        # box_action2 = Operation(point4, 'Action 2')
-        # self.addItem(box_trigger)
-        # self.addItem(box_condition)
-        # self.addItem(box_action1)
-        # self.addItem(box_action2)
-        #
-        # wire1 = Wire(self, box_trigger, Socket.BOTTOM,
-        #              box_condition, Socket.TOP)
-        # wire2 = Wire(self, box_condition, Socket.BOTTOM,
-        #              box_action1, Socket.TOP
-        #              , Mode.TRUE)
-        # # TODO So far, autorouting is only supported from Socket.RIGHT
-        # wire3 = Wire(self, box_condition, Socket.TOP,
-        #              box_action2, Socket.LEFT
-        #              , Mode.FALSE)
-        # wire4 = Wire(self, box_condition, Socket.TOP,
-        #              box_action2, Socket.TOP
-        #              , Mode.NORMAL)
-        # wire5 = Wire(self, box_condition, Socket.TOP,
-        #              box_action2, Socket.RIGHT
-        #              , Mode.TRUE)
-        # wire6 = Wire(self, box_condition, Socket.TOP,
-        #              box_action2, Socket.BOTTOM
-        #              , Mode.ERROR)
-        # self.addItem(wire1)
-        # self.addItem(wire2)
-        # self.addItem(wire3)
-        # self.addItem(wire4)
-        # self.addItem(wire5)
-        # self.addItem(wire6)
+        point1 = QPoint(0, 0)
+        point2 = QPoint(0, 160)
+        point3 = QPoint(0, 320)
+        point4 = QPoint(160, 320)
+        box_trigger = Trigger(point1, 'Trigger')
+        box_condition = Condition(point2, 'Condition')
+        box_action1 = Operation(point3, 'Action 1')
+        box_action2 = Operation(point4, 'Action 2')
+        self.addItem(box_trigger)
+        self.addItem(box_condition)
+        self.addItem(box_action1)
+        self.addItem(box_action2)
 
+        wire1 = Wire(self, box_trigger, Socket.BOTTOM,
+                     box_condition, Socket.TOP)
+        wire2 = Wire(self, box_condition, Socket.BOTTOM,
+                     box_action1, Socket.TOP
+                     , Mode.TRUE)
+        wire3 = Wire(self, box_condition, Socket.TOP,
+                     box_action2, Socket.LEFT
+                     , Mode.FALSE)
+        wire4 = Wire(self, box_condition, Socket.TOP,
+                     box_action2, Socket.TOP
+                     , Mode.NORMAL)
+        wire5 = Wire(self, box_condition, Socket.TOP,
+                     box_action2, Socket.RIGHT
+                     , Mode.TRUE)
+        wire6 = Wire(self, box_condition, Socket.TOP,
+                     box_action2, Socket.BOTTOM
+                     , Mode.ERROR)
+        self.addItem(wire1)
+        self.addItem(wire2)
+        self.addItem(wire3)
+        self.addItem(wire4)
+        self.addItem(wire5)
+        self.addItem(wire6)
+
+    def create_test_flows(self):
         # I-shaped routes
         point_i_base = QPoint(0, 0)
-        point_i_up = QPoint(0, -120)
+        point_i_top = QPoint(0, -120)
         point_i_down = QPoint(0, 120)
         point_i_left = QPoint(-120, 0)
         point_i_right = QPoint(120, 0)
         box_i_base = Operation(point_i_base, 'I')
-        box_i_up = Operation(point_i_up, 'I_up')
+        box_i_top = Operation(point_i_top, 'I_top')
         box_i_down = Operation(point_i_down, 'I_down')
         box_i_left = Operation(point_i_left, 'I_left')
         box_i_right = Operation(point_i_right, 'I_right')
         self.addItem(box_i_base)
-        self.addItem(box_i_up)
+        self.addItem(box_i_top)
         self.addItem(box_i_down)
         self.addItem(box_i_left)
         self.addItem(box_i_right)
-        wire_i_up = Wire(self, box_i_base, Socket.TOP,
-                         box_i_up, Socket.BOTTOM,
-                         Mode.TRUE)
+        wire_i_top = Wire(self, box_i_base, Socket.TOP,
+                          box_i_top, Socket.BOTTOM,
+                          Mode.TRUE)
         wire_i_down = Wire(self, box_i_base, Socket.BOTTOM,
                            box_i_down, Socket.TOP,
                            Mode.FALSE)
@@ -195,43 +198,43 @@ class CanvasScene(QGraphicsScene):
         wire_i_right = Wire(self, box_i_base, Socket.RIGHT,
                             box_i_right, Socket.LEFT,
                             Mode.NORMAL)
-        self.addItem(wire_i_up)
+        self.addItem(wire_i_top)
         self.addItem(wire_i_down)
         self.addItem(wire_i_left)
         self.addItem(wire_i_right)
 
         # L-shaped routes
-        point_i_base = QPoint(400, 0)
-        point_i_topright = QPoint(520, -120)
-        point_i_bottomleft = QPoint(280, 120)
-        point_i_lefttop = QPoint(280, -120)
-        point_i_rightbottom = QPoint(520, 120)
-        box_i_base = Operation(point_i_base, 'L')
-        box_i_topright = Operation(point_i_topright, 'L_topright')
-        box_i_bottomleft = Operation(point_i_bottomleft, 'L_bottomleft')
-        box_i_lefttop = Operation(point_i_lefttop, 'L_lefttop')
-        box_i_rightbottom = Operation(point_i_rightbottom, 'L_rightbottom')
-        self.addItem(box_i_base)
-        self.addItem(box_i_topright)
-        self.addItem(box_i_bottomleft)
-        self.addItem(box_i_lefttop)
-        self.addItem(box_i_rightbottom)
-        wire_i_topright = Wire(self, box_i_base, Socket.TOP,
-                               box_i_topright, Socket.LEFT,
+        point_l_base = QPoint(400, 0)
+        point_l_topright = QPoint(520, -120)
+        point_l_bottomleft = QPoint(280, 120)
+        point_l_lefttop = QPoint(280, -120)
+        point_l_rightbottom = QPoint(520, 120)
+        box_l_base = Operation(point_l_base, 'L')
+        box_l_topright = Operation(point_l_topright, 'L_topright')
+        box_l_bottomleft = Operation(point_l_bottomleft, 'L_bottomleft')
+        box_l_lefttop = Operation(point_l_lefttop, 'L_lefttop')
+        box_l_rightbottom = Operation(point_l_rightbottom, 'L_rightbottom')
+        self.addItem(box_l_base)
+        self.addItem(box_l_topright)
+        self.addItem(box_l_bottomleft)
+        self.addItem(box_l_lefttop)
+        self.addItem(box_l_rightbottom)
+        wire_l_topright = Wire(self, box_l_base, Socket.TOP,
+                               box_l_topright, Socket.LEFT,
                                Mode.TRUE)
-        wire_i_bottomleft = Wire(self, box_i_base, Socket.BOTTOM,
-                                 box_i_bottomleft, Socket.RIGHT,
+        wire_l_bottomleft = Wire(self, box_l_base, Socket.BOTTOM,
+                                 box_l_bottomleft, Socket.RIGHT,
                                  Mode.FALSE)
-        wire_i_lefttop = Wire(self, box_i_base, Socket.LEFT,
-                              box_i_lefttop, Socket.BOTTOM,
+        wire_l_lefttop = Wire(self, box_l_base, Socket.LEFT,
+                              box_l_lefttop, Socket.BOTTOM,
                               Mode.ERROR)
-        wire_i_rightbottom = Wire(self, box_i_base, Socket.RIGHT,
-                                  box_i_rightbottom, Socket.TOP,
+        wire_l_rightbottom = Wire(self, box_l_base, Socket.RIGHT,
+                                  box_l_rightbottom, Socket.TOP,
                                   Mode.NORMAL)
-        self.addItem(wire_i_topright)
-        self.addItem(wire_i_bottomleft)
-        self.addItem(wire_i_lefttop)
-        self.addItem(wire_i_rightbottom)
+        self.addItem(wire_l_topright)
+        self.addItem(wire_l_bottomleft)
+        self.addItem(wire_l_lefttop)
+        self.addItem(wire_l_rightbottom)
 
         # Z-shaped routes
         point_z_base = QPoint(0, 400)
@@ -268,10 +271,10 @@ class CanvasScene(QGraphicsScene):
 
         # S-shaped routes
         point_s_base = QPoint(400, 400)
-        point_s_topright = QPoint(500, 300)
-        point_s_bottomleft = QPoint(300, 500)
-        point_s_lefttop = QPoint(300, 300)
-        point_s_rightbottom = QPoint(500, 500)
+        point_s_topright = QPoint(520, 280)
+        point_s_bottomleft = QPoint(280, 520)
+        point_s_lefttop = QPoint(280, 280)
+        point_s_rightbottom = QPoint(520, 520)
         box_s_base = Operation(point_s_base, 'S')
         box_s_topright = Operation(point_s_topright, 'S_topright')
         box_s_bottomleft = Operation(point_s_bottomleft, 'S_bottomleft')
@@ -282,17 +285,17 @@ class CanvasScene(QGraphicsScene):
         self.addItem(box_s_bottomleft)
         self.addItem(box_s_lefttop)
         self.addItem(box_s_rightbottom)
-        wire_s_topright = Wire(self, box_s_base, Socket.TOP,
-                               box_s_topright, Socket.BOTTOM,
+        wire_s_topright = Wire(self, box_s_base, Socket.BOTTOM,
+                               box_s_topright, Socket.TOP,
                                Mode.TRUE)
-        wire_s_bottomleft = Wire(self, box_s_base, Socket.BOTTOM,
-                                 box_s_bottomleft, Socket.TOP,
+        wire_s_bottomleft = Wire(self, box_s_base, Socket.TOP,
+                                 box_s_bottomleft, Socket.BOTTOM,
                                  Mode.FALSE)
-        wire_s_lefttop = Wire(self, box_s_base, Socket.LEFT,
-                              box_s_lefttop, Socket.RIGHT,
+        wire_s_lefttop = Wire(self, box_s_base, Socket.RIGHT,
+                              box_s_lefttop, Socket.LEFT,
                               Mode.ERROR)
-        wire_s_rightbottom = Wire(self, box_s_base, Socket.RIGHT,
-                                  box_s_rightbottom, Socket.LEFT,
+        wire_s_rightbottom = Wire(self, box_s_base, Socket.LEFT,
+                                  box_s_rightbottom, Socket.RIGHT,
                                   Mode.NORMAL)
         self.addItem(wire_s_topright)
         self.addItem(wire_s_bottomleft)
@@ -365,35 +368,35 @@ class CanvasScene(QGraphicsScene):
         self.addItem(wire_cb_lefttop)
         self.addItem(wire_cb_rightbottom)
 
-        # C-shaped routes, both
-        point_cc_base = QPoint(200, 1200)
-        point_cc_topright = QPoint(320, 1080)
-        point_cc_bottomleft = QPoint(80, 1320)
-        point_cc_lefttop = QPoint(80, 1080)
-        point_cc_rightbottom = QPoint(320, 1320)
-        box_cc_base = Operation(point_cc_base, 'Cc')
-        box_cc_topright = Operation(point_cc_topright, 'Cc_topright')
-        box_cc_bottomleft = Operation(point_cc_bottomleft, 'Cc_bottomleft')
-        box_cc_lefttop = Operation(point_cc_lefttop, 'Cc_lefttop')
-        box_cc_rightbottom = Operation(point_cc_rightbottom, 'Cc_rightbottom')
-        self.addItem(box_cc_base)
-        self.addItem(box_cc_topright)
-        self.addItem(box_cc_bottomleft)
-        self.addItem(box_cc_lefttop)
-        self.addItem(box_cc_rightbottom)
-        wire_cc_topright = Wire(self, box_cc_base, Socket.BOTTOM,
-                                box_cc_topright, Socket.TOP,
-                                Mode.TRUE)
-        wire_cc_bottomleft = Wire(self, box_cc_base, Socket.TOP,
-                                  box_cc_bottomleft, Socket.BOTTOM,
-                                  Mode.FALSE)
-        wire_cc_lefttop = Wire(self, box_cc_base, Socket.RIGHT,
-                               box_cc_lefttop, Socket.LEFT,
-                               Mode.ERROR)
-        wire_cc_rightbottom = Wire(self, box_cc_base, Socket.LEFT,
-                                   box_cc_rightbottom, Socket.RIGHT,
-                                   Mode.NORMAL)
-        self.addItem(wire_cc_topright)
-        self.addItem(wire_cc_bottomleft)
-        self.addItem(wire_cc_lefttop)
-        self.addItem(wire_cc_rightbottom)
+        # C-shaped routes, when an S-shape needs to wrap
+        point_cs_base = QPoint(800, 800)
+        point_cs_topright = QPoint(910, 690)
+        point_cs_bottomleft = QPoint(690, 910)
+        point_cs_lefttop = QPoint(690, 690)
+        point_cs_rightbottom = QPoint(910, 910)
+        box_cs_base = Operation(point_cs_base, 'C (S-wrap)')
+        box_cs_topright = Operation(point_cs_topright, 'CS_topright')
+        box_cs_bottomleft = Operation(point_cs_bottomleft, 'CS_bottomleft')
+        box_cs_lefttop = Operation(point_cs_lefttop, 'CS_lefttop')
+        box_cs_rightbottom = Operation(point_cs_rightbottom, 'CS_rightbottom')
+        self.addItem(box_cs_base)
+        self.addItem(box_cs_topright)
+        self.addItem(box_cs_bottomleft)
+        self.addItem(box_cs_lefttop)
+        self.addItem(box_cs_rightbottom)
+        wire_cs_topright = Wire(self, box_cs_base, Socket.BOTTOM,
+                               box_cs_topright, Socket.TOP,
+                               Mode.TRUE)
+        wire_cs_bottomleft = Wire(self, box_cs_base, Socket.TOP,
+                                 box_cs_bottomleft, Socket.BOTTOM,
+                                 Mode.FALSE)
+        wire_cs_lefttop = Wire(self, box_cs_base, Socket.RIGHT,
+                              box_cs_lefttop, Socket.LEFT,
+                              Mode.ERROR)
+        wire_cs_rightbottom = Wire(self, box_cs_base, Socket.LEFT,
+                                  box_cs_rightbottom, Socket.RIGHT,
+                                  Mode.NORMAL)
+        self.addItem(wire_cs_topright)
+        self.addItem(wire_cs_bottomleft)
+        self.addItem(wire_cs_lefttop)
+        self.addItem(wire_cs_rightbottom)
