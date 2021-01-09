@@ -148,20 +148,20 @@ class CanvasScene(QGraphicsScene):
         wire1 = Wire(self, box_trigger, Socket.BOTTOM,
                      box_condition, Socket.TOP)
         wire2 = Wire(self, box_condition, Socket.BOTTOM,
-                     box_action1, Socket.TOP
-                     , Mode.TRUE)
+                     box_action1, Socket.TOP,
+                     Mode.TRUE)
         wire3 = Wire(self, box_condition, Socket.TOP,
-                     box_action2, Socket.LEFT
-                     , Mode.FALSE)
+                     box_action2, Socket.LEFT,
+                     Mode.FALSE)
         wire4 = Wire(self, box_condition, Socket.TOP,
-                     box_action2, Socket.TOP
-                     , Mode.NORMAL)
+                     box_action2, Socket.TOP,
+                     Mode.NORMAL)
         wire5 = Wire(self, box_condition, Socket.TOP,
-                     box_action2, Socket.RIGHT
-                     , Mode.TRUE)
+                     box_action2, Socket.RIGHT,
+                     Mode.TRUE)
         wire6 = Wire(self, box_condition, Socket.TOP,
-                     box_action2, Socket.BOTTOM
-                     , Mode.ERROR)
+                     box_action2, Socket.BOTTOM,
+                     Mode.ERROR)
         self.addItem(wire1)
         self.addItem(wire2)
         self.addItem(wire3)
@@ -385,17 +385,17 @@ class CanvasScene(QGraphicsScene):
         self.addItem(box_cs_lefttop)
         self.addItem(box_cs_rightbottom)
         wire_cs_topright = Wire(self, box_cs_base, Socket.BOTTOM,
-                               box_cs_topright, Socket.TOP,
-                               Mode.TRUE)
+                                box_cs_topright, Socket.TOP,
+                                Mode.TRUE)
         wire_cs_bottomleft = Wire(self, box_cs_base, Socket.TOP,
-                                 box_cs_bottomleft, Socket.BOTTOM,
-                                 Mode.FALSE)
+                                  box_cs_bottomleft, Socket.BOTTOM,
+                                  Mode.FALSE)
         wire_cs_lefttop = Wire(self, box_cs_base, Socket.RIGHT,
-                              box_cs_lefttop, Socket.LEFT,
-                              Mode.ERROR)
+                               box_cs_lefttop, Socket.LEFT,
+                               Mode.ERROR)
         wire_cs_rightbottom = Wire(self, box_cs_base, Socket.LEFT,
-                                  box_cs_rightbottom, Socket.RIGHT,
-                                  Mode.NORMAL)
+                                   box_cs_rightbottom, Socket.RIGHT,
+                                   Mode.NORMAL)
         self.addItem(wire_cs_topright)
         self.addItem(wire_cs_bottomleft)
         self.addItem(wire_cs_lefttop)
