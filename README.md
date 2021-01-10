@@ -4,6 +4,8 @@ The **well-intentioned crowbar** is a desktop task automation tool with an intui
 
 This document explains a few things that might be important for users of the crowbar.
 
+![](media/crowbar/screenshot.png)
+
 ## Intent
 
 It is well-known that many users don't outright _desire_ to "get dirty" on a scary command line, they "just want things to work" ... but perhaps a little differently than they do by default.
@@ -16,8 +18,6 @@ For instance:
  - you might want to change your preferred audio devices when they are (un)plugged. Again, doable, but it doesn't "just happen" out of the box.
 
 These are some of the things you will be able to do from the familiar comfort of a normal desktop application.
-
-![](media/crowbar/screenshot.png)
 
 <!--- TODO
 ## Installation
