@@ -43,7 +43,7 @@ class CanvasScene(QGraphicsScene):
         self._pen_grid_dot = QPen()
         self._pen_grid_dot.setWidth(1)
         self._pen_grid_dot.setCosmetic(True)
-        self._pen_grid_dot.setColor(QColor(0, 64, 0))
+        self._pen_grid_dot.setColor(QColor(0, 96, 0))
 
     def _prepare_background_grid(self):
         self._pen_grid_minor = QPen()
@@ -117,7 +117,7 @@ class CanvasScene(QGraphicsScene):
         # Axis lines are simpler
         lines_axis.append(QLineF(0, r.top(), 0, r.bottom()))
         lines_axis.append(QLineF(r.left(), 0, r.right(), 0))
-        # Draw in order from minor to axis, so br lines aren't chopped t by darker ones
+        # Draw in minor>medium>major>axis order so brighter lines aren't chopped up by darker ones
         pens_and_lines = [
             (self._pen_grid_minor, lines_minor),
             (self._pen_grid_medium, lines_medium),
@@ -176,7 +176,7 @@ class CanvasScene(QGraphicsScene):
         point_i_b = QPoint(0, 120)
         point_i_l = QPoint(-120, 0)
         point_i_r = QPoint(120, 0)
-        box_i_base = Operation(point_i_base, 'I')
+        box_i_base = Trigger(point_i_base, 'I')
         box_i_t = Operation(point_i_t, 'I_t')
         box_i_b = Operation(point_i_b, 'I_b')
         box_i_l = Operation(point_i_l, 'I_l')
@@ -203,200 +203,233 @@ class CanvasScene(QGraphicsScene):
         self.addItem(wire_i_l)
         self.addItem(wire_i_r)
 
-        # L-shaped routes
-        point_l_base = QPoint(400, 0)
-        point_l_tr = QPoint(520, -120)
-        point_l_bl = QPoint(280, 120)
-        point_l_lt = QPoint(280, -120)
-        point_l_rb = QPoint(520, 120)
-        box_l_base = Operation(point_l_base, 'L')
-        box_l_tr = Operation(point_l_tr, 'L_tr')
-        box_l_bl = Operation(point_l_bl, 'L_bl')
-        box_l_lt = Operation(point_l_lt, 'L_lt')
-        box_l_rb = Operation(point_l_rb, 'L_rb')
-        self.addItem(box_l_base)
-        self.addItem(box_l_tr)
-        self.addItem(box_l_bl)
-        self.addItem(box_l_lt)
-        self.addItem(box_l_rb)
-        wire_l_tr = Wire(self, box_l_base, Socket.TOP,
-                         box_l_tr, Socket.LEFT,
-                         Mode.TRUE)
-        wire_l_bl = Wire(self, box_l_base, Socket.BOTTOM,
-                         box_l_bl, Socket.RIGHT,
-                         Mode.FALSE)
-        wire_l_lt = Wire(self, box_l_base, Socket.LEFT,
-                         box_l_lt, Socket.BOTTOM,
-                         Mode.ERROR)
-        wire_l_rb = Wire(self, box_l_base, Socket.RIGHT,
-                         box_l_rb, Socket.TOP,
-                         Mode.NORMAL)
-        self.addItem(wire_l_tr)
-        self.addItem(wire_l_bl)
-        self.addItem(wire_l_lt)
-        self.addItem(wire_l_rb)
+        # L-shaped routes (inside/direct route)
+        point_li_base = QPoint(400, 0)
+        point_li_tr = QPoint(520, -120)
+        point_li_bl = QPoint(280, 120)
+        point_li_tl = QPoint(280, -120)
+        point_li_br = QPoint(520, 120)
+        box_li_base = Trigger(point_li_base, 'LI')
+        box_li_tr = Operation(point_li_tr, 'LI_tr')
+        box_li_bl = Operation(point_li_bl, 'LI_bl')
+        box_li_tl = Operation(point_li_tl, 'LI_tl')
+        box_li_br = Operation(point_li_br, 'LI_br')
+        self.addItem(box_li_base)
+        self.addItem(box_li_tr)
+        self.addItem(box_li_bl)
+        self.addItem(box_li_tl)
+        self.addItem(box_li_br)
+        wire_li_tr = Wire(self, box_li_base, Socket.TOP,
+                          box_li_tr, Socket.LEFT,
+                          Mode.TRUE)
+        wire_li_bl = Wire(self, box_li_base, Socket.BOTTOM,
+                          box_li_bl, Socket.RIGHT,
+                          Mode.FALSE)
+        wire_li_tl = Wire(self, box_li_base, Socket.LEFT,
+                          box_li_tl, Socket.BOTTOM,
+                          Mode.ERROR)
+        wire_li_br = Wire(self, box_li_base, Socket.RIGHT,
+                          box_li_br, Socket.TOP,
+                          Mode.NORMAL)
+        self.addItem(wire_li_tr)
+        self.addItem(wire_li_bl)
+        self.addItem(wire_li_tl)
+        self.addItem(wire_li_br)
+
+        # L-shaped routes (outside/indirect route)
+        point_lo_base = QPoint(800, 0)
+        point_lo_tr = QPoint(910, -120)
+        point_lo_bl = QPoint(690, 120)
+        point_lo_tl = QPoint(690, -120)
+        point_lo_br = QPoint(910, 120)
+        box_lo_base = Trigger(point_lo_base, 'LO')
+        box_lo_tr = Operation(point_lo_tr, 'LO_t')
+        box_lo_bl = Operation(point_lo_bl, 'LO_b')
+        box_lo_tl = Operation(point_lo_tl, 'LO_l')
+        box_lo_br = Operation(point_lo_br, 'LO_r')
+        self.addItem(box_lo_base)
+        self.addItem(box_lo_tr)
+        self.addItem(box_lo_bl)
+        self.addItem(box_lo_tl)
+        self.addItem(box_lo_br)
+        wire_lo_tr = Wire(self, box_lo_base, Socket.LEFT,
+                          box_lo_tr, Socket.TOP,
+                          Mode.TRUE)
+        wire_lo_bl = Wire(self, box_lo_base, Socket.RIGHT,
+                          box_lo_bl, Socket.BOTTOM,
+                          Mode.FALSE)
+        wire_lo_tl = Wire(self, box_lo_base, Socket.BOTTOM,
+                          box_lo_tl, Socket.LEFT,
+                          Mode.ERROR)
+        wire_lo_br = Wire(self, box_lo_base, Socket.TOP,
+                          box_lo_br, Socket.RIGHT,
+                          Mode.NORMAL)
+        self.addItem(wire_lo_tr)
+        self.addItem(wire_lo_bl)
+        self.addItem(wire_lo_tl)
+        self.addItem(wire_lo_br)
 
         # Z-shaped routes
         point_z_base = QPoint(0, 400)
         point_z_tr = QPoint(120, 280)
         point_z_bl = QPoint(-120, 520)
-        point_z_lt = QPoint(-120, 280)
-        point_z_rb = QPoint(120, 520)
-        box_z_base = Operation(point_z_base, 'Z')
+        point_z_tl = QPoint(-120, 280)
+        point_z_br = QPoint(120, 520)
+        box_z_base = Trigger(point_z_base, 'Z')
         box_z_tr = Operation(point_z_tr, 'Z_tr')
         box_z_bl = Operation(point_z_bl, 'Z_bl')
-        box_z_lt = Operation(point_z_lt, 'Z_lt')
-        box_z_rb = Operation(point_z_rb, 'Z_rb')
+        box_z_tl = Operation(point_z_tl, 'Z_tl')
+        box_z_br = Operation(point_z_br, 'Z_br')
         self.addItem(box_z_base)
         self.addItem(box_z_tr)
         self.addItem(box_z_bl)
-        self.addItem(box_z_lt)
-        self.addItem(box_z_rb)
+        self.addItem(box_z_tl)
+        self.addItem(box_z_br)
         wire_z_tr = Wire(self, box_z_base, Socket.TOP,
                          box_z_tr, Socket.BOTTOM,
                          Mode.TRUE)
         wire_z_bl = Wire(self, box_z_base, Socket.BOTTOM,
                          box_z_bl, Socket.TOP,
                          Mode.FALSE)
-        wire_z_lt = Wire(self, box_z_base, Socket.LEFT,
-                         box_z_lt, Socket.RIGHT,
+        wire_z_tl = Wire(self, box_z_base, Socket.LEFT,
+                         box_z_tl, Socket.RIGHT,
                          Mode.ERROR)
-        wire_z_rb = Wire(self, box_z_base, Socket.RIGHT,
-                         box_z_rb, Socket.LEFT,
+        wire_z_br = Wire(self, box_z_base, Socket.RIGHT,
+                         box_z_br, Socket.LEFT,
                          Mode.NORMAL)
         self.addItem(wire_z_tr)
         self.addItem(wire_z_bl)
-        self.addItem(wire_z_lt)
-        self.addItem(wire_z_rb)
+        self.addItem(wire_z_tl)
+        self.addItem(wire_z_br)
 
         # S-shaped routes
         point_s_base = QPoint(400, 400)
         point_s_tr = QPoint(520, 280)
         point_s_bl = QPoint(280, 520)
-        point_s_lt = QPoint(280, 280)
-        point_s_rb = QPoint(520, 520)
-        box_s_base = Operation(point_s_base, 'S')
+        point_s_tl = QPoint(280, 280)
+        point_s_br = QPoint(520, 520)
+        box_s_base = Trigger(point_s_base, 'S')
         box_s_tr = Operation(point_s_tr, 'S_tr')
         box_s_bl = Operation(point_s_bl, 'S_bl')
-        box_s_lt = Operation(point_s_lt, 'S_lt')
-        box_s_rb = Operation(point_s_rb, 'S_rb')
+        box_s_tl = Operation(point_s_tl, 'S_tl')
+        box_s_br = Operation(point_s_br, 'S_br')
         self.addItem(box_s_base)
         self.addItem(box_s_tr)
         self.addItem(box_s_bl)
-        self.addItem(box_s_lt)
-        self.addItem(box_s_rb)
+        self.addItem(box_s_tl)
+        self.addItem(box_s_br)
         wire_s_tr = Wire(self, box_s_base, Socket.BOTTOM,
                          box_s_tr, Socket.TOP,
                          Mode.TRUE)
         wire_s_bl = Wire(self, box_s_base, Socket.TOP,
                          box_s_bl, Socket.BOTTOM,
                          Mode.FALSE)
-        wire_s_lt = Wire(self, box_s_base, Socket.RIGHT,
-                         box_s_lt, Socket.LEFT,
+        wire_s_tl = Wire(self, box_s_base, Socket.RIGHT,
+                         box_s_tl, Socket.LEFT,
                          Mode.ERROR)
-        wire_s_rb = Wire(self, box_s_base, Socket.LEFT,
-                         box_s_rb, Socket.RIGHT,
+        wire_s_br = Wire(self, box_s_base, Socket.LEFT,
+                         box_s_br, Socket.RIGHT,
                          Mode.NORMAL)
         self.addItem(wire_s_tr)
         self.addItem(wire_s_bl)
-        self.addItem(wire_s_lt)
-        self.addItem(wire_s_rb)
+        self.addItem(wire_s_tl)
+        self.addItem(wire_s_br)
 
         # C-shaped routes, destination
         point_ca_base = QPoint(0, 800)
         point_ca_tr = QPoint(120, 680)
         point_ca_bl = QPoint(-120, 920)
-        point_ca_lt = QPoint(-120, 680)
-        point_ca_rb = QPoint(120, 920)
-        box_ca_base = Operation(point_ca_base, 'Ca')
+        point_ca_tl = QPoint(-120, 680)
+        point_ca_br = QPoint(120, 920)
+        box_ca_base = Trigger(point_ca_base, 'Ca')
         box_ca_tr = Operation(point_ca_tr, 'Ca_tr')
         box_ca_bl = Operation(point_ca_bl, 'Ca_bl')
-        box_ca_lt = Operation(point_ca_lt, 'Ca_lt')
-        box_ca_rb = Operation(point_ca_rb, 'Ca_rb')
+        box_ca_tl = Operation(point_ca_tl, 'Ca_tl')
+        box_ca_br = Operation(point_ca_br, 'Ca_br')
         self.addItem(box_ca_base)
         self.addItem(box_ca_tr)
         self.addItem(box_ca_bl)
-        self.addItem(box_ca_lt)
-        self.addItem(box_ca_rb)
+        self.addItem(box_ca_tl)
+        self.addItem(box_ca_br)
         wire_ca_tr = Wire(self, box_ca_base, Socket.TOP,
                           box_ca_tr, Socket.TOP,
                           Mode.TRUE)
         wire_ca_bl = Wire(self, box_ca_base, Socket.BOTTOM,
                           box_ca_bl, Socket.BOTTOM,
                           Mode.FALSE)
-        wire_ca_lt = Wire(self, box_ca_base, Socket.LEFT,
-                          box_ca_lt, Socket.LEFT,
+        wire_ca_tl = Wire(self, box_ca_base, Socket.LEFT,
+                          box_ca_tl, Socket.LEFT,
                           Mode.ERROR)
-        wire_ca_rb = Wire(self, box_ca_base, Socket.RIGHT,
-                          box_ca_rb, Socket.RIGHT,
+        wire_ca_br = Wire(self, box_ca_base, Socket.RIGHT,
+                          box_ca_br, Socket.RIGHT,
                           Mode.NORMAL)
         self.addItem(wire_ca_tr)
         self.addItem(wire_ca_bl)
-        self.addItem(wire_ca_lt)
-        self.addItem(wire_ca_rb)
+        self.addItem(wire_ca_tl)
+        self.addItem(wire_ca_br)
 
         # C-shaped routes, source
         point_cb_base = QPoint(400, 800)
         point_cb_tr = QPoint(520, 680)
         point_cb_bl = QPoint(280, 920)
-        point_cb_lt = QPoint(280, 680)
-        point_cb_rb = QPoint(520, 920)
-        box_cb_base = Operation(point_cb_base, 'Cb')
+        point_cb_tl = QPoint(280, 680)
+        point_cb_br = QPoint(520, 920)
+        box_cb_base = Trigger(point_cb_base, 'Cb')
         box_cb_tr = Operation(point_cb_tr, 'Cb_tr')
         box_cb_bl = Operation(point_cb_bl, 'Cb_bl')
-        box_cb_lt = Operation(point_cb_lt, 'Cb_lt')
-        box_cb_rb = Operation(point_cb_rb, 'Cb_rb')
+        box_cb_tl = Operation(point_cb_tl, 'Cb_tl')
+        box_cb_br = Operation(point_cb_br, 'Cb_br')
         self.addItem(box_cb_base)
         self.addItem(box_cb_tr)
         self.addItem(box_cb_bl)
-        self.addItem(box_cb_lt)
-        self.addItem(box_cb_rb)
+        self.addItem(box_cb_tl)
+        self.addItem(box_cb_br)
         wire_cb_tr = Wire(self, box_cb_base, Socket.BOTTOM,
                           box_cb_tr, Socket.BOTTOM,
                           Mode.TRUE)
         wire_cb_bl = Wire(self, box_cb_base, Socket.TOP,
                           box_cb_bl, Socket.TOP,
                           Mode.FALSE)
-        wire_cb_lt = Wire(self, box_cb_base, Socket.RIGHT,
-                          box_cb_lt, Socket.RIGHT,
+        wire_cb_tl = Wire(self, box_cb_base, Socket.RIGHT,
+                          box_cb_tl, Socket.RIGHT,
                           Mode.ERROR)
-        wire_cb_rb = Wire(self, box_cb_base, Socket.LEFT,
-                          box_cb_rb, Socket.LEFT,
+        wire_cb_br = Wire(self, box_cb_base, Socket.LEFT,
+                          box_cb_br, Socket.LEFT,
                           Mode.NORMAL)
         self.addItem(wire_cb_tr)
         self.addItem(wire_cb_bl)
-        self.addItem(wire_cb_lt)
-        self.addItem(wire_cb_rb)
+        self.addItem(wire_cb_tl)
+        self.addItem(wire_cb_br)
 
         # C-shaped routes, when an S-shape needs to wrap
         point_cs_base = QPoint(800, 800)
-        point_cs_tr = QPoint(910, 690)
-        point_cs_bl = QPoint(690, 910)
-        point_cs_lt = QPoint(690, 690)
-        point_cs_rb = QPoint(910, 910)
-        box_cs_base = Operation(point_cs_base, 'C (S-wrap)')
+        point_cs_tr = QPoint(880, 680)
+        point_cs_bl = QPoint(720, 920)
+        point_cs_tl = QPoint(680, 720)
+        point_cs_br = QPoint(920, 880)
+        box_cs_base = Trigger(point_cs_base, 'C (S-wrap)')
         box_cs_tr = Operation(point_cs_tr, 'CS_tr')
         box_cs_bl = Operation(point_cs_bl, 'CS_bl')
-        box_cs_lt = Operation(point_cs_lt, 'CS_lt')
-        box_cs_rb = Operation(point_cs_rb, 'CS_rb')
+        box_cs_tl = Operation(point_cs_tl, 'CS_tl')
+        box_cs_br = Operation(point_cs_br, 'CS_br')
         self.addItem(box_cs_base)
         self.addItem(box_cs_tr)
         self.addItem(box_cs_bl)
-        self.addItem(box_cs_lt)
-        self.addItem(box_cs_rb)
+        self.addItem(box_cs_tl)
+        self.addItem(box_cs_br)
         wire_cs_tr = Wire(self, box_cs_base, Socket.BOTTOM,
                           box_cs_tr, Socket.TOP,
                           Mode.TRUE)
         wire_cs_bl = Wire(self, box_cs_base, Socket.TOP,
                           box_cs_bl, Socket.BOTTOM,
                           Mode.FALSE)
-        wire_cs_lt = Wire(self, box_cs_base, Socket.RIGHT,
-                          box_cs_lt, Socket.LEFT,
+        wire_cs_tl = Wire(self, box_cs_base, Socket.RIGHT,
+                          box_cs_tl, Socket.LEFT,
                           Mode.ERROR)
-        wire_cs_rb = Wire(self, box_cs_base, Socket.LEFT,
-                          box_cs_rb, Socket.RIGHT,
+        wire_cs_br = Wire(self, box_cs_base, Socket.LEFT,
+                          box_cs_br, Socket.RIGHT,
                           Mode.NORMAL)
         self.addItem(wire_cs_tr)
         self.addItem(wire_cs_bl)
-        self.addItem(wire_cs_lt)
-        self.addItem(wire_cs_rb)
+        self.addItem(wire_cs_tl)
+        self.addItem(wire_cs_br)

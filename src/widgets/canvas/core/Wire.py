@@ -91,10 +91,10 @@ class Wire(QGraphicsPolygonItem):
         delta_x = p_to.x() - p_from.x()
         delta_y = p_to.y() - p_from.y()
 
-        # First point
+        # First point (leave source socket)
         route.append(p_from)
 
-        # Intermediate points
+        # Intermediate waypoints
         if self._to_socket.oppositeOf(self._from_socket):  # Some variant of I-, S- or Z-shape
             if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
                 if (delta_y >= 2 * self._min_len and self._from_socket == Socket.BOTTOM) \
@@ -137,9 +137,9 @@ class Wire(QGraphicsPolygonItem):
             self.route_C_path(route, p_from, p_to, delta_x, delta_y)
         else:  # Some variant of L-shape
             # print("L")
-            self.route_L_path(route, p_from, p_to)
+            self.route_L_path(route, p_from, p_to, delta_x, delta_y)
 
-        # Last point
+        # Last point (enter destination socket)
         route.append(p_to)
         self._add_path_arrow_head(route)
         self.setPolygon(route)
@@ -188,9 +188,8 @@ class Wire(QGraphicsPolygonItem):
             p_from.x() + offset_from_x,
             p_from.y() + offset_from_y
         ))
+        # Then, a Z-shaped route between the offset points
         if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
-            pass
-            # Then, a Z-shaped route between the offset points
             route.append(QPointF(
                 p_from.x() + offset_from_x2,
                 p_from.y() + offset_from_y
@@ -200,8 +199,6 @@ class Wire(QGraphicsPolygonItem):
                 p_to.y() + offset_to_y
             ))
         else:
-            pass
-            # Then, a Z-shaped route between the offset points
             route.append(QPointF(
                 p_from.x() + offset_from_x,
                 p_from.y() + offset_from_y2
@@ -217,7 +214,6 @@ class Wire(QGraphicsPolygonItem):
         ))
 
     def route_C_path(self, route, p_from, p_to, delta_x, delta_y):
-        # First, an offset point if the source is facing away from the destination and is "on the outside"
         if (delta_y >= 0 and self._from_socket == Socket.TOP) or (delta_y < 0 and self._to_socket == Socket.TOP):
             # Source is facing away from destination and is above it, or
             # Destination is facing away from source and is above it
@@ -270,19 +266,60 @@ class Wire(QGraphicsPolygonItem):
                 p_to.y()
             ))
 
-    def route_L_path(self, route, p_from, p_to):
-        # All we need here is to find one corner point.
-        # Which way we're going can be determined simply by looking at the orientation of one of the sockets.
-        if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
-            p_x = p_from.x()
-            p_y = p_to.y()
+    def route_L_path(self, route, p_from, p_to, delta_x, delta_y):
+        if (self._from_socket == Socket.TOP and delta_y < 0) \
+                or (self._from_socket == Socket.BOTTOM and delta_y > 0) \
+                or (self._from_socket == Socket.LEFT and delta_x < 0) \
+                or (self._from_socket == Socket.RIGHT and delta_x > 0):
+            # Inside L
+            # All we need here is to find the inside corner point.
+            # Which way we're going can be determined simply by looking at the orientation of one of the sockets.
+            if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
+                p_x = p_from.x()
+                p_y = p_to.y()
+            else:
+                p_x = p_to.x()
+                p_y = p_from.y()
+            route.append(QPointF(
+                p_x,
+                p_y
+            ))
         else:
-            p_x = p_to.x()
-            p_y = p_from.y()
-        route.append(QPointF(
-            p_x,
-            p_y
-        ))
+            # Outside L
+            if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
+                offset_from_x = 0
+                offset_from_y = self._min_len if self._from_socket == Socket.BOTTOM else -self._min_len
+            else:
+                offset_from_x = self._min_len if self._from_socket == Socket.RIGHT else -self._min_len
+                offset_from_y = 0
+            if self._to_socket == Socket.TOP or self._to_socket == Socket.BOTTOM:
+                offset_to_x = 0
+                offset_to_y = self._min_len if self._to_socket == Socket.BOTTOM else -self._min_len
+            else:
+                offset_to_x = self._min_len if self._to_socket == Socket.RIGHT else -self._min_len
+                offset_to_y = 0
+            # First, an offset point
+            route.append(QPointF(
+                p_from.x() + offset_from_x,
+                p_from.y() + offset_from_y
+            ))
+            # Then, an offset point at the outside corner
+            # Which way we're going can be determined simply by looking at the orientation of one of the sockets.
+            if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
+                p_x = p_to.x() + offset_to_x
+                p_y = p_from.y() + offset_from_y
+            else:
+                p_x = p_from.x() + offset_from_x
+                p_y = p_to.y() + offset_to_y
+            route.append(QPointF(
+                p_x,
+                p_y
+            ))
+            # Finally, another offset point
+            route.append(QPointF(
+                p_to.x() + offset_to_x,
+                p_to.y() + offset_to_y
+            ))
 
     def _add_path_arrow_head(self, wire_path: QPolygonF):
         """ This assumes that the last point of `wire_path` ends at the destination socket,
@@ -374,4 +411,4 @@ class Wire(QGraphicsPolygonItem):
         painter.setPen(dot_pen)
         for i in range(0, self.polygon().size() - 3):  # Don't paint dots on the arrow head
             p = self.polygon().value(i)
-            painter.drawPoint(p)
+            # painter.drawPoint(p)
