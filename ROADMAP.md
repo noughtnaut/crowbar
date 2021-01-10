@@ -8,6 +8,7 @@ This document explains some of the things that might happen to the project in th
 
 ### [0.0.1]
 
+- Doesn't alter your computer.
 - Teach myself PyQt skills.
 - The app can get up and running.
 
@@ -22,6 +23,7 @@ This document explains some of the things that might happen to the project in th
 
 - Doesn't alter your computer.
 - Flows can be 'executed'; flow progression is visualized, but still no actual system integration.
+- Flow execution is logged. This can aid the user in debugging their flows, and can be used for statistics.
 
 ### [0.0.4]
 
@@ -40,7 +42,20 @@ This document explains some of the things that might happen to the project in th
 
 ### [0.2.0]
 
+- More built-in Triggers
+- More built-in Operations
 - User can create some reasonable amount of scripting for Operation components.
+- Variables; scope is limited to single component or flow
+
+### [0.2.x]
+
+- More built-in Triggers
+- More built-in Operations
+- Improved scripting
+
+### [0.3.0]
+
+- Global variables are supported; there is a UI to manage them separately from running tasks
 
 ### The heap
 
@@ -56,10 +71,6 @@ Current sticky-notes on the white-board; highly unorganized yet vaguely descendi
 - External links in README should point to archive.org
 - Figure out how to reasonably test UI operations such as autowiring
 - Give arrows rounded corners. Nice to have, but also helps discerning routing when wires visually overlap.
-
-#### Layers
-
-I wanted to ensure that connector lines are drawn behind boxes, but I think the Qt layer model involves only "foreground" and "background", plus a z-axis that seems to be not well integrated into graphic items. So I tried just putting all the boxes into one group, and all the connectors into another -- but that screws up the ability to grab-and-drag the boxes around on the canvas. Bummer. So the groups went away again (leaving just the one for the background grid).
 
 #### MISC. NOTES
 
