@@ -61,16 +61,27 @@ This document explains some of the things that might happen to the project in th
 
 Current sticky-notes on the white-board; highly unorganized yet vaguely descending in priority:
 
+- Moving a Component must also cause all attached wires to adjust
 - Add logging for debugging etc.
 - Decide and adhere to public|private variable|method NAMING: snake_case or camelCase?
 - Create a dummy folder/flow data structure, and play with the left pane
 - Make resources work like they do in Designer
 - Component titles should be centered (needs using text instead of static text?)
-- Moving a Component must also cause all attached wires to adjust
 - Deleting a Component must delete all attached Wires.
 - External links in README should point to archive.org
+- Components might have small icons on them, indicating their type.
 - Figure out how to reasonably test UI operations such as autowiring
-- Give arrows rounded corners. Nice to have, but also helps discerning routing when wires visually overlap.
+- Give wires rounded corners. Nice to have, but also helps discerning routing when wires visually overlap.
+- Use [ReDoc](https://github.com/Redocly/redoc#readme) for documentation?
+- Use [FastAPI](https://github.com/tiangolo/fastapi#readme) for API?
+- Use [release-it](https://github.com/release-it/release-it#readme) for release management?
+- Use [shields.io](https://github.com/badges/shields#readme) for site badges?
+- Reach out to Cuttlefish fans when the crowbar is reasonably demo-able?
+  - https://bugs.launchpad.net/cuttlefish/+bug/1686395
+  - https://www.maketecheasier.com/automate-ubuntu-with-cuttlefish/
+  - https://www.omgubuntu.co.uk/2012/09/automate-ubuntu-with-cuttlefish
+  - https://askubuntu.com/questions/583838/task-automation-with-cuttlefish-get-it-working-under-16-04-or-suggest-an-altern
+  - https://askubuntu.com/questions/310559/how-to-install-cuttlefish-in-ubuntu-13-04
 
 #### MISC. NOTES
 
