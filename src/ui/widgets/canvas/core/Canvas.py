@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QGridLayout, QWidget
 
-from widgets.canvas.core.Scene import CanvasScene
-from widgets.canvas.core.View import CanvasView
+from ui.widgets.canvas.core.Scene import CanvasScene
+from ui.widgets.canvas.core.View import CanvasView
 
 
 class Canvas(QWidget):

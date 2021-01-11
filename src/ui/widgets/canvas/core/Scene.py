@@ -3,11 +3,11 @@ from PyQt5.QtCore import QLineF, QPoint, QRect
 from PyQt5.QtGui import QBrush, QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGraphicsScene
 
-from widgets.canvas.Condition import Condition
-from widgets.canvas.Operation import Operation
-from widgets.canvas.Trigger import Trigger
-from widgets.canvas.core.Enums import Mode, Socket
-from widgets.canvas.core.Wire import Wire
+from ui.widgets.canvas.Condition import Condition
+from ui.widgets.canvas.Operation import Operation
+from ui.widgets.canvas.Trigger import Trigger
+from ui.widgets.canvas.core.Enums import Mode, Socket
+from ui.widgets.canvas.core.Wire import Wire
 
 
 class CanvasScene(QGraphicsScene):

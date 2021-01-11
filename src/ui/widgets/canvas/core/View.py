@@ -4,7 +4,7 @@ from PyQt5.QtGui import QMouseEvent, QWheelEvent
 from PyQt5.QtWidgets import QFrame, QGraphicsView, QWidget
 
 from ui.UiUtils import click_descriptor, with_control_key
-from widgets.canvas.core.Scene import CanvasScene
+from ui.widgets.canvas.core.Scene import CanvasScene
 
 
 class CanvasView(QGraphicsView):

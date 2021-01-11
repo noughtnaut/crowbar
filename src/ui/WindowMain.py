@@ -3,9 +3,9 @@ from PyQt5.QtGui import QMoveEvent, QResizeEvent
 from PyQt5.QtWidgets import *
 
 from src.ui.UiUtils import get_child
-from src.widgets.PanedWidget import PanedWidget
-from src.widgets.ToolBar import ToolBar
-from widgets.canvas.core.Canvas import Canvas
+from ui.widgets.PanedWidget import PanedWidget
+from ui.widgets.ToolBar import ToolBar
+from ui.widgets.canvas.core.Canvas import Canvas
 
 
 class WindowMain(QMainWindow):
@@ -71,16 +71,15 @@ class WindowMain(QMainWindow):
         self.setStatusBar(status)
 
     def _create_content(self):
-        self.setCentralWidget(PanedWidget(
-            self.create_pane_left(),
-            self.create_pane_right(),
-        ))
-        splitter = get_child(self.centralWidget(), QSplitter)
+        paned_widget = PanedWidget()
+        paned_widget.addWidget(self.create_pane_left())
+        paned_widget.addWidget(self.create_pane_right())
         # Don't allow either pane to be shrunk to nothing
-        splitter.setCollapsible(0, False)
-        splitter.setCollapsible(1, False)
+        paned_widget.setCollapsible(0, False)
+        paned_widget.setCollapsible(1, False)
         # Give preference to canvas pane
-        splitter.setStretchFactor(1, 10)
+        paned_widget.setStretchFactor(1, 10)
+        self.setCentralWidget(paned_widget)
 
     def create_pane_left(self):
         content = QMainWindow()
