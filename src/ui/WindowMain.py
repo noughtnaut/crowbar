@@ -2,7 +2,6 @@ from PyQt5.QtCore import QPoint, QSettings, QSize
 from PyQt5.QtGui import QMoveEvent, QResizeEvent
 from PyQt5.QtWidgets import *
 
-from src.ui.UiUtils import get_child
 from ui.widgets.PanedWidget import PanedWidget
 from ui.widgets.ToolBar import ToolBar
 from ui.widgets.canvas.core.Canvas import Canvas
@@ -112,13 +111,15 @@ class WindowMain(QMainWindow):
 
         self.setCanvas(Canvas())
         content.setCentralWidget(self.canvas())
-        scene = self.canvas().scene()
 
         self._do_view_zoom_reset()
-        self._do_view_zoom_out()  # TODO Remove this when autorouting works
-        self._do_view_zoom_out()
-        self._do_view_zoom_out()
-        # self._do_view_zoom_to_fit()  # This zooms WAY out ... why? The scene HAS items by now.
+        # self._do_view_zoom_to_fit()  # FIXME This zooms WAY out ... why? The scene HAS items by now.
+
+        # TODO Remove these when autorouting works
+        # self._do_view_zoom_reset()
+        # self._do_view_zoom_out()
+        # self._do_view_zoom_out()
+        # self._do_view_zoom_out()
         return content
 
     def canvas(self):

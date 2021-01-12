@@ -60,6 +60,10 @@ class CanvasView(QGraphicsView):
         # print(click_descriptor(event, 'scroll'))
         # Zoom on Ctrl-scroll
         if with_control_key(event) and event.angleDelta().y():
+            # TODO Using `AnchorUnderMouse` is correct but doesn't work well near scene boundaries.
+            #      Optimal solution is to make the scene boundless and remove the scroll bars.
+            #      Until then, we'll just anchor zooming to the center of the view.
+            # self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
             if event.angleDelta().y() > 0:
                 self.zoom_in()
             else:
@@ -78,7 +82,7 @@ class CanvasView(QGraphicsView):
     def zoom_by_factor(self, factor):
         new_zoom = self._zoom * factor
         if self._zoom_min < new_zoom < self._zoom_max:
-            self.scale(factor, factor)
+            self.scale(factor, factor)  # TODO `scale()` is obsolete, use `setTransform()` instead (here and elsewhere)
             self._zoom = self.transform().m11()  # m11 and m22 are the applied x and y scaling factors
 
     def zoom_reset(self):

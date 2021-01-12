@@ -2,6 +2,7 @@ from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QPainter, QPainterPath, QPolygonF
 
 from ui.widgets.canvas.core.Component import Component
+from ui.widgets.canvas.core.Enums import Socket
 
 
 class Condition(Component):
@@ -20,16 +21,11 @@ class Condition(Component):
 
     def initShape(self):
         self._polygon = QPolygonF()
-        # Calculate by axis
-        top = QPoint(self.pos().x(), self.pos().y() - self.height() / 2)
-        bot = QPoint(self.pos().x(), self.pos().y() + self.height() / 2)
-        lef = QPoint(self.pos().x() - self.width() / 2, self.pos().y())
-        rig = QPoint(self.pos().x() + self.width() / 2, self.pos().y())
         # Add points by clockwise order
-        self._polygon.append(top)
-        self._polygon.append(rig)
-        self._polygon.append(bot)
-        self._polygon.append(lef)
+        self._polygon.append(self.socketPoint(Socket.TOP))
+        self._polygon.append(self.socketPoint(Socket.RIGHT))
+        self._polygon.append(self.socketPoint(Socket.BOTTOM))
+        self._polygon.append(self.socketPoint(Socket.LEFT))
         self._shape = QPainterPath()
         self._shape.addPolygon(self._polygon)
 

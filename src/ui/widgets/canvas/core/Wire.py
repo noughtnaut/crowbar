@@ -43,7 +43,7 @@ class Wire(QGraphicsPolygonItem):
                  mode: Mode = Mode.NORMAL,
                  title: str = None):
         super().__init__()
-        self.initPainter()
+        self._initPainter()
         self.setMode(mode)
         self.setTitle(title)
         self._from_component = from_component
@@ -56,7 +56,7 @@ class Wire(QGraphicsPolygonItem):
         self.autoRoute()
         # Don't set cursor here; it would apply to entire bounding rect
 
-    def initPainter(self):
+    def _initPainter(self):
         pen = QPen()
         pen.setWidth(1)
         pen.setJoinStyle(Qt.RoundJoin)
@@ -97,54 +97,54 @@ class Wire(QGraphicsPolygonItem):
         # Intermediate waypoints
         if self._to_socket.oppositeOf(self._from_socket):  # Some variant of I-, S- or Z-shape
             if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
-                if (delta_y >= 2 * self._min_len and self._from_socket == Socket.BOTTOM) \
-                        or (delta_y < 2 * self._min_len and self._from_socket == Socket.TOP):
-                    # There's enough room between the components to make a simple cross-line
-                    if delta_x == 0:
-                        # Straight vertical, no intermediate points needed
-                        # We test for this early on because it'll be a common occurrence.
-                        # print("Straight vertical")
-                        pass
-                    else:
+                if delta_x == 0:
+                    # Straight vertical, no intermediate points needed
+                    # We test for this early on because it'll be a common occurrence.
+                    # print("Straight vertical")
+                    pass
+                else:
+                    if (delta_y >= 2 * self._min_len and self._from_socket == Socket.BOTTOM) \
+                            or (delta_y < 2 * self._min_len and self._from_socket == Socket.TOP):
+                        # There's enough room between the components to make a simple cross-line
                         # print("N")
-                        self.route_Z_path(route, p_from, p_to, delta_x, delta_y)
-                else:
-                    # There isn't enough room to make a simple cross-line, we need to make a detour
-                    # print("~")
-                    self.route_S_path(route, p_from, p_to)
-                    # TODO Detect when the detour can't keep minimum distance, use a C-shape instead
-                    #      To decide this, we need to know the actual size of the component
-            else:  # from Socket.LEFT or from Socket.RIGHT
-                if (delta_x >= 2 * self._min_len and self._from_socket == Socket.RIGHT) \
-                        or (delta_x < 2 * self._min_len and self._from_socket == Socket.LEFT):
-                    # There's enough room between the components to make a simple cross-line
-                    if delta_y == 0:
-                        # Straight horizontal, no intermediate points needed
-                        # We test for this early on because it'll be a common occurrence.
-                        # print("Straight horizontal")
-                        pass
+                        self._route_Z_path(route, p_from, p_to, delta_x, delta_y)
                     else:
-                        # print("Z")
-                        self.route_Z_path(route, p_from, p_to, delta_x, delta_y)
+                        # There isn't enough room to make a simple cross-line, we need to make a detour
+                        # print("~")
+                        self.route_S_path(route, p_from, p_to)
+                        # TODO Detect when the detour can't keep minimum distance, use a C-shape instead
+                        #      To decide this, we need to know the actual size of the component
+            else:  # from Socket.LEFT or from Socket.RIGHT
+                if delta_y == 0:
+                    # Straight horizontal, no intermediate points needed
+                    # We test for this early on because it'll be a common occurrence.
+                    # print("Straight horizontal")
+                    pass
                 else:
-                    # There isn't enough room to make a simple cross-line, we need to make a detour
-                    # print("S")
-                    self.route_S_path(route, p_from, p_to)
-                    # TODO Detect when the detour can't keep minimum distance, use a C-shape instead
-                    #      To decide this, we need to know the actual size of the component
+                    if (delta_x >= 2 * self._min_len and self._from_socket == Socket.RIGHT) \
+                            or (delta_x < 2 * self._min_len and self._from_socket == Socket.LEFT):
+                        # There's enough room between the components to make a simple cross-line
+                        # print("Z")
+                        self._route_Z_path(route, p_from, p_to, delta_x, delta_y)
+                    else:
+                        # There isn't enough room to make a simple cross-line, we need to make a detour
+                        # print("S")
+                        self.route_S_path(route, p_from, p_to)
+                        # TODO Detect when the detour can't keep minimum distance, use a C-shape instead
+                        #      To decide this, we need to know the actual size of the component
         elif self._to_socket == self._from_socket:  # Some variant of C- or J-shape
             # print("C")
-            self.route_C_path(route, p_from, p_to, delta_x, delta_y)
+            self._route_C_path(route, p_from, p_to, delta_x, delta_y)
         else:  # Some variant of L-shape
             # print("L")
-            self.route_L_path(route, p_from, p_to, delta_x, delta_y)
+            self._route_L_path(route, p_from, p_to, delta_x, delta_y)
 
         # Last point (enter destination socket)
         route.append(p_to)
         self._add_path_arrow_head(route)
         self.setPolygon(route)
 
-    def route_Z_path(self, route, p_from, p_to, delta_x, delta_y):
+    def _route_Z_path(self, route, p_from, p_to, delta_x, delta_y):
         if self._from_socket == Socket.TOP or self._from_socket == Socket.BOTTOM:
             # Components aren't vertically aligned, so we need a horizontal cross-line.
             offset_y = delta_y / 2
@@ -213,7 +213,7 @@ class Wire(QGraphicsPolygonItem):
             p_to.y() + offset_to_y
         ))
 
-    def route_C_path(self, route, p_from, p_to, delta_x, delta_y):
+    def _route_C_path(self, route, p_from, p_to, delta_x, delta_y):
         if (delta_y >= 0 and self._from_socket == Socket.TOP) or (delta_y < 0 and self._to_socket == Socket.TOP):
             # Source is facing away from destination and is above it, or
             # Destination is facing away from source and is above it
@@ -252,8 +252,8 @@ class Wire(QGraphicsPolygonItem):
                 offset_x,
                 p_to.y()
             ))
-        elif (delta_x <= 0 and self._from_socket == Socket.RIGHT) \
-                or (delta_x > 0 and self._to_socket == Socket.RIGHT):
+        else:  # if (delta_x <= 0 and self._from_socket == Socket.RIGHT) \
+            #    or (delta_x > 0 and self._to_socket == Socket.RIGHT):
             # Source is facing away from destination and is right of it, or
             # Destination is facing away from source and is right of it
             offset_x = max(p_from.x(), p_to.x()) + self._min_len
@@ -266,7 +266,7 @@ class Wire(QGraphicsPolygonItem):
                 p_to.y()
             ))
 
-    def route_L_path(self, route, p_from, p_to, delta_x, delta_y):
+    def _route_L_path(self, route, p_from, p_to, delta_x, delta_y):
         if (self._from_socket == Socket.TOP and delta_y < 0) \
                 or (self._from_socket == Socket.BOTTOM and delta_y > 0) \
                 or (self._from_socket == Socket.LEFT and delta_x < 0) \
@@ -364,7 +364,7 @@ class Wire(QGraphicsPolygonItem):
                 self._to_component.socketPoint(self._to_socket).x(),
                 self._to_component.socketPoint(self._to_socket).y()
             ))
-        elif self._to_socket == Socket.LEFT:
+        else:  # if self._to_socket == Socket.LEFT:
             wire_path.append(QPointF(
                 self._to_component.socketPoint(self._to_socket).x() - 7,
                 self._to_component.socketPoint(self._to_socket).y() - 5
@@ -399,11 +399,11 @@ class Wire(QGraphicsPolygonItem):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setPen(self.pen())
         painter.drawPolyline(self.polygon())
-        self.paint_poly_points(painter)
+        self._paint_poly_points(painter)
         # FIXME Paint wires *behind* components
         # TODO Write label near source socket
 
-    def paint_poly_points(self, painter):
+    def _paint_poly_points(self, painter):
         dot_pen = QPen()
         dot_pen.setWidth(4)
         dot_pen.setCosmetic(True)
