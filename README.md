@@ -29,9 +29,17 @@ During installation, the crowbar will set itself up to start when you log in, bu
 
 ### Concepts
 
-The foundation of automating things with the crowbar is the **Task**. A task is a collection of **Components** which are bound together using **Wires**. The components determine what to do, and the wires determine the order and flow of execution by directing **Flow Processes** through the task.
+The foundation of automating things with the crowbar is the **Task**. A task is a collection of **Components** which are
+bound together using **Wires**. The components determine what to do, and the wires determine the order and flow of
+execution by directing **Flow Processes** through the task.
 
-Components may have any number of input and output wires connected to them. A component will execute whenever it receives a flow process through an(y) input wire. A component with no output wires will terminate the process (after having executed as normal); whereas the presence of multiple output wires will serve to split the flow into several processes, each executing subsequent components in parallel. Such continues the flow of execution until no more processes are running for the task. Tasks run completely independently of one-another, although they may invoke one-another as sub-tasks, and you can control whether or not any given task may run more than one instance of itself at any given time.
+Components may have any number of input and output wires connected to them. A component will execute whenever it
+receives a flow process through an(y) input wire. A component with no output wires will terminate the process (after
+having executed as normal), whereas the presence of multiple output wires will serve to split the flow into several
+processes, each executing subsequent components in parallel. Such continues the flow of execution until no more
+processes are running for the task. Tasks run completely independently of one-another, although they may invoke
+one-another as sub-tasks, and you can control whether any given task may run more than one instance of itself at any
+given time.
 
 Components come in three main types:
 
@@ -63,16 +71,30 @@ This software is distributed under the terms of the GNU General Public License v
 
 ### Heritage
 
-![automagic icon](media/heritage/automagic-icon-32.png) Not so long ago there was a very neat [automation tool](http://automagic4android.com/) [for Android](https://play.google.com/store/apps/details?id=ch.gridvision.ppam.androidautomagic) that allowed you to do all sorts of things in a very intuitive graphical manner using flowchart blocks and arrows. Sadly, that project is [no longer maintained](http://automagic4android.com/forum/viewtopic.php?f=5&t=8787), but it gave me the inspiration to replicate the experience for the desktop.
+![automagic icon](media/heritage/automagic-icon-32.png) Not so long ago there was a very
+neat [automation tool](http://automagic4android.com/) [for Android](https://play.google.com/store/apps/details?id=ch.gridvision.ppam.androidautomagic)
+that allowed you to do all sorts of things in a very intuitive graphical manner using flowchart blocks and arrows.
+Sadly, that project
+is [no longer maintained](http://http://web.archive.org/web/20210124172352/http://automagic4android.com/forum/viewtopic.php?f=5&t=8787)
+, but it gave me the inspiration to replicate the experience for the desktop.
 
-![Llama](media/heritage/llama-32.png) I would not have even looked for Automagic if it weren't for [Llama](http://kebabapps.blogspot.com/), the "location aware mobile application", which let me automate so many things way back on Android 1.5. It too, sadly, was felled by the rapidly changing nature of Android.
+![Llama](media/heritage/llama-32.png) I would not have even looked for Automagic if it weren't
+for [Llama](http://kebabapps.blogspot.com/), the "location aware mobile application", which let me automate so many
+things way back on Android 1.5. It too, sadly, was felled by the rapidly changing nature of Android.
 
 ### Motivation
 
-I'm using somewhat of a [hack](https://github.com/noughtnaut/noughty-autorandr) to automatically change my default printer according to the current network connection. It works, but for the wrong reasons. I'd like to make a decent solution for this _and similar_ needs, and I've been meaning to get into open source desktop app development, so I took this as my cue. If I could make something like [Automagic](http://automagic4android.com/), that would be neat.
+I'm using somewhat of a [hack](https://github.com/noughtnaut/noughty-autorandr) to automatically change my default
+printer according to the current network connection. It works, but for the wrong reasons. I'd like to make a decent
+solution for this _and similar_ needs, and I've been meaning to get into open source desktop app development, so I took
+this as my cue. If I could make something like Automagic, that would be neat.
 
-Further, there once was a desktop app called [Cuttlefish](https://launchpad.net/cuttlefish) which could do sort of what I was after, albeit not as elaborate as Automagic. The fact that it has seen no upkeep since 2012 but the last bug report is from 2017 indicates that people do go out of their way to achieve some level of automation.
+Further, there once was a desktop app called [Cuttlefish](https://launchpad.net/cuttlefish) which could do sort of what
+I was after, albeit not as elaborate as Automagic. The fact that it has seen no upkeep since 2012 but the last bug
+report is from 2017 indicates that people do go out of their way to achieve some level of automation.
 
 ### Contributors
 
-If you want to help this project along, I'd be very grateful. I don't, though, have any expectations so I also haven't thought about what form contributions ought to follow. Give it a shot, see what happens! Who knows, perhaps there's special recognition for the first contributor?
+If you want to help this project along, I'd be very grateful. I don't have any expectations, though, so I also haven't
+thought about what form contributions ought to follow. Give it a shot, see what happens! Who knows, perhaps there's
+special recognition for the first contributor?
