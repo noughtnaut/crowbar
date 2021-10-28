@@ -12,7 +12,7 @@ class Socket(enum.Enum):
     LEFT = 4
 
     # TODO The above represents socket "facing"; for RAS we will need several sockets on the same face,
-    # TODO and also socket name, type, order (incl. grouping/spacers), etc.
+    #      and also socket name, type, order (incl. grouping/spacers), etc.
 
     def oppositeOf(self, s) -> bool:
         """ Return TRUE if the two sockets are facing in opposite directions (up/down or left/right).

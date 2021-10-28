@@ -70,7 +70,7 @@ class Wire(QGraphicsPolygonItem):
     # TODO Double-click a path segment to convert it to a Z-bend (adjust neighbours by half)
     # TODO Ctrl-double-click a path segment to remove a Z-bend (if possible)
 
-    def autoRoute(self):
+    def autoRoute(self, target: Component = None):
         # Routing rules:
         # - If the wire can be straight, let it be straight.
         #   - This requires the sockets to be opposing and aligned.
@@ -79,14 +79,27 @@ class Wire(QGraphicsPolygonItem):
         # - If the wire must wrap around a component to reach its socket, also keep 20px of distance.
         # - If we need to make a Z-bend, let the zig intersect the zag down the middle.
         #   - Ditto for the middle part of S-bends.
-        #   - This is mainly for pleasing symmetry. We should be able to manually adjust routes later on.
+        #   - This is mainly for pleasing symmetry.
+        #     TODO We should be able to manually adjust routes later on.
 
         route = QPolygonF()
+        # TODO Change route to be an array of `WireSegment`s. Each WireSegment should store only two numbers for
+        #  start/end coordinates on the segment's axis. The axis itself can be inferred, as the first segment would be
+        #  perpendicular to the anchor, and the rest would alternate. Similarly, the two numbers for the other axis of
+        #  the coordinates can be gleaned from the previous and next segments (or anchor points).
 
-        # print(self._from_component.title(), "-", self._to_component.title())
+        if target is not None:
+            print("target: ", target.scenePos())
+            # TODO Should we update p_to with target?
 
+        print(self._from_component.title(), "-", self._to_component.title())
+
+        # print("from  : ", self._from_component.scenePos())
+        # print("to    : ", self._to_component.scenePos())
         p_from = self._from_component.socketPoint(self._from_socket)
         p_to = self._to_component.socketPoint(self._to_socket)
+        print("p_from  : ", p_from)
+        print("p_to    : ", p_to)
 
         delta_x = p_to.x() - p_from.x()
         delta_y = p_to.y() - p_from.y()

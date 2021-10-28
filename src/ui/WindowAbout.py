@@ -17,7 +17,9 @@ class WindowAbout(QDialog):
         pixmap = QtGui.QPixmap('media/crowbar/crowbar-flat-500.png')
         image = QLabel()
         image.setText('crowbar')
-        image.setFrameShape(QFrame.Panel)
+        # image.setContentsMargins(-40, -40, -40, -40)
+        # TODO Image is clipped at edges. Add padding or something? It seems QLabel being broken is a known issue, ugh.
+        # image.setFrameShape(QFrame.Panel)
         image.setPixmap(pixmap)
         image.setAlignment(Qt.AlignCenter)
         layout.addWidget(image)

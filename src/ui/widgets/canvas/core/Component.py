@@ -34,7 +34,7 @@ class Component(QGraphicsRectItem):
             _DEFAULT_SIZE_H
         )
         super().__init__(r)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        # self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemSendsScenePositionChanges, True)
         self.setVisible(True)
@@ -43,6 +43,10 @@ class Component(QGraphicsRectItem):
         self._wiring_in = []
         self._wiring_out = []
         self.setCursor(Qt.OpenHandCursor)
+
+    def __repr__(self):
+        return type(self).__name__ + "(title=%r, pos=(%r,%r))" \
+               % (self._title, self.scenePos().x(), self.scenePos().y())
 
     def initPainter(self):
         pen_component_edge = QPen()
@@ -89,12 +93,13 @@ class Component(QGraphicsRectItem):
             x = round(new_pos.x() / grid_snap_increment) * grid_snap_increment
             y = round(new_pos.y() / grid_snap_increment) * grid_snap_increment
             return QPointF(x, y)
-        elif change == QGraphicsItem.ItemPositionHasChanged and self.scene():
+        elif change == QGraphicsItem.ItemScenePositionHasChanged:
             # FIXME Why is `autoRoute()` still seeing the original component positions?
+            print("moved to:", self)
             for wire in self._wiring_in:
-                wire.autoRoute()
+                wire.autoRoute(self)
             for wire in self._wiring_out:
-                wire.autoRoute()
+                wire.autoRoute(self)
         else:
             return QGraphicsItem.itemChange(self, change, new_pos)
 

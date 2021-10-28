@@ -115,11 +115,6 @@ class WindowMain(QMainWindow):
         self._do_view_zoom_reset()
         # self._do_view_zoom_to_fit()  # FIXME This zooms WAY out ... why? The scene HAS items by now.
 
-        # TODO Remove these when autorouting works
-        # self._do_view_zoom_reset()
-        # self._do_view_zoom_out()
-        # self._do_view_zoom_out()
-        # self._do_view_zoom_out()
         return content
 
     def canvas(self):

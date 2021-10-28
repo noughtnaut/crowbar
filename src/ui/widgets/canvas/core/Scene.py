@@ -19,8 +19,8 @@ class CanvasScene(QGraphicsScene):
         self.setSceneRect(-5000, -500, 10000, 10000)  # TODO This should be set outside of Canvas
         # TODO Ideally, the canvas should be 'boundless', adjusted on the fly as needed, with no scroll bars
         self._prepare_background()
-        # self.create_sample_flow()
-        self.create_test_flows()
+        self.create_sample_flow()
+        # self.create_test_flows()
 
     def grid_snap_increment(self):
         return self._grid_snap_increment
@@ -150,24 +150,12 @@ class CanvasScene(QGraphicsScene):
         wire2 = Wire(self, box_condition, Socket.BOTTOM,
                      box_action1, Socket.TOP,
                      Mode.TRUE)
-        wire3 = Wire(self, box_condition, Socket.TOP,
+        wire3 = Wire(self, box_condition, Socket.RIGHT,
                      box_action2, Socket.LEFT,
                      Mode.FALSE)
-        wire4 = Wire(self, box_condition, Socket.TOP,
-                     box_action2, Socket.TOP,
-                     Mode.NORMAL)
-        wire5 = Wire(self, box_condition, Socket.TOP,
-                     box_action2, Socket.RIGHT,
-                     Mode.TRUE)
-        wire6 = Wire(self, box_condition, Socket.TOP,
-                     box_action2, Socket.BOTTOM,
-                     Mode.ERROR)
         self.addItem(wire1)
         self.addItem(wire2)
         self.addItem(wire3)
-        self.addItem(wire4)
-        self.addItem(wire5)
-        self.addItem(wire6)
 
     def create_test_flows(self):
         # I-shaped routes
