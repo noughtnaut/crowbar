@@ -3,8 +3,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QMouseEvent, QWheelEvent
 from PyQt5.QtWidgets import QFrame, QGraphicsView, QWidget
 
-from ui.UiUtils import click_descriptor, with_control_key
-from ui.widgets.canvas.core.Scene import CanvasScene
+from src.ui.UiUtils import click_descriptor, with_control_key
+from src.ui.widgets.canvas.core.Scene import CanvasScene
 
 
 class CanvasView(QGraphicsView):

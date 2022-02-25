@@ -5,8 +5,8 @@ from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtGui import QColor, QPainter, QPen, QPolygonF
 from PyQt5.QtWidgets import QGraphicsPolygonItem, QStyleOptionGraphicsItem, QWidget
 
-from ui.widgets.canvas.core import Component, Scene
-from ui.widgets.canvas.core.Enums import Mode, Socket
+from src.ui.widgets.canvas.core import Component, Scene
+from src.ui.widgets.canvas.core.Enums import Mode, Socket
 
 
 class Wire(QGraphicsPolygonItem):

@@ -1,6 +1,6 @@
 from PyQt5.QtGui import QPainter
 
-from ui.widgets.canvas.core.Component import Component
+from src.ui.widgets.canvas.core.Component import Component
 
 
 class Operation(Component):

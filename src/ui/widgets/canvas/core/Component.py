@@ -6,8 +6,8 @@ from PyQt5.QtCore import QPointF, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QPainter, QPen, QStaticText
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsRectItem, QStyleOptionGraphicsItem, QWidget
 
-from ui.widgets.canvas.core import Wire
-from ui.widgets.canvas.core.Enums import Socket
+from src.ui.widgets.canvas.core import Wire
+from src.ui.widgets.canvas.core.Enums import Socket
 
 _DEFAULT_SIZE_W = 80
 _DEFAULT_SIZE_H = 80

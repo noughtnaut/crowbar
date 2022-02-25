@@ -2,9 +2,9 @@ from PyQt5.QtCore import QPoint, QSettings, QSize
 from PyQt5.QtGui import QMoveEvent, QResizeEvent
 from PyQt5.QtWidgets import *
 
-from ui.widgets.PanedWidget import PanedWidget
-from ui.widgets.ToolBar import ToolBar
-from ui.widgets.canvas.core.Canvas import Canvas
+from src.ui.widgets.PanedWidget import PanedWidget
+from src.ui.widgets.ToolBar import ToolBar
+from src.ui.widgets.canvas.core.Canvas import Canvas
 
 
 class WindowMain(QMainWindow):

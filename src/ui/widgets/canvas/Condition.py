@@ -1,8 +1,7 @@
-from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QPainter, QPainterPath, QPolygonF
 
-from ui.widgets.canvas.core.Component import Component
-from ui.widgets.canvas.core.Enums import Socket
+from src.ui.widgets.canvas.core.Component import Component
+from src.ui.widgets.canvas.core.Enums import Socket
 
 
 class Condition(Component):

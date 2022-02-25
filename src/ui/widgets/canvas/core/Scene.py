@@ -3,11 +3,11 @@ from PyQt5.QtCore import QLineF, QPoint, QRect
 from PyQt5.QtGui import QBrush, QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGraphicsScene
 
-from ui.widgets.canvas.Condition import Condition
-from ui.widgets.canvas.Operation import Operation
-from ui.widgets.canvas.Trigger import Trigger
-from ui.widgets.canvas.core.Enums import Mode, Socket
-from ui.widgets.canvas.core.Wire import Wire
+from src.ui.widgets.canvas.Condition import Condition
+from src.ui.widgets.canvas.Operation import Operation
+from src.ui.widgets.canvas.Trigger import Trigger
+from src.ui.widgets.canvas.core.Enums import Mode, Socket
+from src.ui.widgets.canvas.core.Wire import Wire
 
 
 class CanvasScene(QGraphicsScene):
@@ -74,10 +74,10 @@ class CanvasScene(QGraphicsScene):
         # - this avoids edge glitches of background fill
         # - this ensures all necessary grid lines are included
         r = QRect(
-            rect.left() - self.grid_minor() - rect.left() % self.grid_minor(),
-            rect.top() - self.grid_minor() - rect.top() % self.grid_minor(),
-            rect.width() + 2 * (self.grid_minor() + rect.width() % self.grid_minor()),
-            rect.height() + 2 * (self.grid_minor() + rect.height() % self.grid_minor())
+            int(rect.left() - self.grid_minor() - rect.left() % self.grid_minor()),
+            int(rect.top() - self.grid_minor() - rect.top() % self.grid_minor()),
+            int(rect.width() + 2 * (self.grid_minor() + rect.width() % self.grid_minor())),
+            int(rect.height() + 2 * (self.grid_minor() + rect.height() % self.grid_minor()))
         )
 
         # Fill the background

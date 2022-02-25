@@ -3,8 +3,8 @@ import typing
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
 
-from ui.WindowAbout import WindowAbout
-from ui.WindowMain import WindowMain
+from src.ui.WindowAbout import WindowAbout
+from src.ui.WindowMain import WindowMain
 
 
 class CrowbarApp(QApplication):
